@@ -1,0 +1,5 @@
+interface:
+  display_name: "DefSpec New"
+  short_description: "Create a DefSpec requirement draft"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-new to create the next requirement draft for this project."

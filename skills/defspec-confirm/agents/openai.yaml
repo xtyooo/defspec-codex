@@ -1,0 +1,5 @@
+interface:
+  display_name: "DefSpec Confirm"
+  short_description: "Analyze and confirm a requirement"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-confirm to confirm REQ-001 for this project."

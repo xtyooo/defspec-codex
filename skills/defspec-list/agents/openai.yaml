@@ -1,0 +1,5 @@
+interface:
+  display_name: "DefSpec List"
+  short_description: "List DefSpec requirement status"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-list to show this project's requirements and statuses."

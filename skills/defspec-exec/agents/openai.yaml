@@ -1,0 +1,5 @@
+interface:
+  display_name: "DefSpec Exec"
+  short_description: "Design or implement a requirement"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-exec to design or execute REQ-001 for this project."

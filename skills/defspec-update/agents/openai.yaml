@@ -1,0 +1,6 @@
+interface:
+  display_name: "DefSpec Update"
+  short_description: "Revise an existing requirement"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-update to apply a change to REQ-001."
+

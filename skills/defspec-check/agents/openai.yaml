@@ -1,0 +1,6 @@
+interface:
+  display_name: "DefSpec Check"
+  short_description: "Review requirement progress and risks"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-check to review REQ-001 and report gaps or risks."
+

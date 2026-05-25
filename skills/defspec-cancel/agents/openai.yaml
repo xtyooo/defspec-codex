@@ -1,0 +1,6 @@
+interface:
+  display_name: "DefSpec Cancel"
+  short_description: "Cancel a DefSpec requirement"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-cancel to cancel REQ-001."
+

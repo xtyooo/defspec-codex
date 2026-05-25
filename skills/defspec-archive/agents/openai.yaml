@@ -1,0 +1,6 @@
+interface:
+  display_name: "DefSpec Archive"
+  short_description: "Finalize and archive a requirement"
+  brand_color: "#2563EB"
+  default_prompt: "Use $defspec-archive to archive REQ-001 after completion."
+

@@ -1,0 +1,37 @@
+{
+  "name": "defspec-codex",
+  "version": "0.1.0",
+  "description": "DefSpec requirement-driven development workflow for Codex with slash-discoverable skills.",
+  "type": "module",
+  "bin": {
+    "defspec-codex": "bin/defspec-codex.js"
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "templates/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "codex",
+    "skills",
+    "defspec",
+    "requirements",
+    "spec-driven-development",
+    "ai-coding"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xtyooo/defspec-codex.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xtyooo/defspec-codex/issues"
+  },
+  "homepage": "https://github.com/xtyooo/defspec-codex#readme",
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
