@@ -93,6 +93,8 @@ npx github:xtyooo/defspec-codex --check
 
 检查结果里这些项应该是绿色：`plugin manifest`、`marketplace entry`、`Codex plugin enabled`、`command /defspec:*`。
 
+安装器还会提示你初始化 `docs/defspec/project-guide.md`。这个文件是后续 DefSpec 工作的项目地图，建议首次安装后按提示让 Codex 分析项目并补全。
+
 > 发布到 npm 后，也可以使用更短的命令：`npx defspec-codex`
 
 ---
@@ -135,6 +137,12 @@ npx github:xtyooo/defspec-codex --uninstall
 npx github:xtyooo/defspec-codex --uninstall --skills-only
 ```
 
+脚本或 CI 中跳过 `project-guide.md` 初始化提示：
+
+```bash
+npx github:xtyooo/defspec-codex --no-guide-prompt
+```
+
 ---
 
 ## 安装内容
@@ -174,6 +182,32 @@ docs/defspec/
 ├── project-guide.md
 ├── requirements/
 └── specs/
+```
+
+---
+
+## 初始化 project-guide.md
+
+`docs/defspec/project-guide.md` 是 DefSpec 的项目级上下文。后续使用 `/defspec:new`、`/defspec:confirm`、`/defspec:exec`、`/defspec:check` 时，Codex 会先读取它来理解项目结构和开发约束。
+
+首次安装后，如果这个文件仍是模板，安装器会询问：
+
+```text
+Start project-guide initialization now? [Y/n]
+```
+
+选择 `Y` 后，安装器会输出一段可直接发给 Codex 的初始化指令。Codex 会根据当前仓库补全：
+
+- 项目概述、技术栈和目录职责。
+- 主要业务链路、分层模式和依赖方向。
+- 配置、生成代码、数据库、缓存、队列和外部服务。
+- 测试、构建、运行命令。
+- 后续需求开发时的约束、风险和不要修改的文件。
+
+如果暂时跳过，也可以之后在 Codex 里发送：
+
+```text
+请初始化当前项目的 DefSpec project-guide。
 ```
 
 ---

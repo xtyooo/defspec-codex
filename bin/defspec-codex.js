@@ -12,6 +12,7 @@ import {
   writeFileSync,
 } from 'fs';
 import { dirname, join, resolve } from 'path';
+import { createInterface } from 'readline/promises';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
 
@@ -106,6 +107,7 @@ Usage:
   npx defspec-codex --check         Check current installation
   npx defspec-codex --uninstall     Remove current project DefSpec files
   npx defspec-codex --uninstall --skills-only
+  npx defspec-codex --no-guide-prompt
   npx defspec-codex --yes           Overwrite existing template files
   npx defspec-codex --force         Allow project init in home directory
 
@@ -269,6 +271,85 @@ function initProject({ force, yes }) {
   }
 }
 
+function projectGuideNeedsInit() {
+  const guidePath = resolve(PROJECT_DIR, 'docs', 'defspec', 'project-guide.md');
+  if (!existsSync(guidePath)) return false;
+  const content = readFileSync(guidePath, 'utf8');
+  return content.includes('待补全');
+}
+
+function buildProjectGuidePrompt() {
+  return `请初始化当前项目的 DefSpec project-guide。
+
+请先阅读：
+
+1. docs/defspec/DEFSPEC.md
+2. docs/defspec/project.md
+3. docs/defspec/project-guide.md
+4. AGENTS.md
+
+然后分析当前仓库的真实代码结构、技术栈、开发规范、运行方式、测试方式和常见改动路径，并更新 docs/defspec/project-guide.md。
+
+要求：
+
+1. 遍历项目主要目录，说明各模块职责。
+2. 识别语言、框架、数据库、缓存、队列、协议、部署方式和外部依赖。
+3. 总结项目分层、依赖方向、生成代码规则和常见改动路径。
+4. 提取当前项目的测试、构建、运行命令。
+5. 标出后续需求开发时必须注意的约束、风险和不要修改的文件。
+6. 内容要面向后续 DefSpec 需求开发，不写无关介绍，不保留“待补全”。
+
+完成后请运行必要的轻量检查，并总结你更新了哪些项目指南内容。`;
+}
+
+async function promptProjectGuideInit({ skip }) {
+  if (skip || !projectGuideNeedsInit()) return;
+
+  const guidePath = resolve(PROJECT_DIR, 'docs', 'defspec', 'project-guide.md');
+  console.log(`
+  Next recommended step: initialize project-guide.md
+
+  DefSpec has created:
+    ${guidePath}
+
+  Why this matters:
+    project-guide.md is the project map Codex reads before future DefSpec work.
+    If it stays as a template, Codex may miss your module boundaries, build commands,
+    generated-code rules, test strategy, and files that should not be touched.
+
+  What "initialize" means:
+    Codex should inspect this repository, then replace the placeholder sections in
+    docs/defspec/project-guide.md with project-specific guidance.
+`);
+
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    console.log('  Non-interactive shell detected. To initialize later, send this prompt to Codex:\n');
+    console.log(buildProjectGuidePrompt());
+    return;
+  }
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = (await rl.question('  Start project-guide initialization now? [Y/n] ')).trim().toLowerCase();
+  rl.close();
+
+  if (answer && !['y', 'yes'].includes(answer)) {
+    console.log(`
+  Skipped for now.
+
+  When you are ready, open Codex in this project and send:
+
+${buildProjectGuidePrompt()}
+`);
+    return;
+  }
+
+  console.log(`
+  Copy the prompt below into Codex to start initialization:
+
+${buildProjectGuidePrompt()}
+`);
+}
+
 function checkInstall() {
   const names = sourceSkillNames();
   const commands = sourceCommandNames();
@@ -380,6 +461,7 @@ const skillsOnly = has('--skills-only');
 const initOnly = has('--init-only');
 const force = has('--force') || has('-f');
 const yes = has('--yes') || has('-y');
+const noGuidePrompt = has('--no-guide-prompt');
 
 try {
   if (help) {
@@ -397,6 +479,7 @@ try {
     console.log(`\ndefspec-codex v${PKG.version}\n`);
     if (!initOnly) installCodexIntegration();
     if (!skillsOnly) initProject({ force, yes });
+    if (!skillsOnly) await promptProjectGuideInit({ skip: noGuidePrompt });
     console.log('\n  Install complete. Restart Codex, then type /defspec in the composer.\n');
   }
 } catch (error) {

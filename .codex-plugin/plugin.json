@@ -1,6 +1,6 @@
 {
   "name": "defspec",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "DefSpec requirement-driven development workflow for Codex with slash-discoverable commands and skills.",
   "author": {
     "name": "xtyooo",
