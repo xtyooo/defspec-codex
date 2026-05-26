@@ -1,6 +1,6 @@
 ---
-description: Create a new SpecPilot requirement draft with the next requirement id.
-argument-hint: [requirement summary]
+name: specpilot-new
+description: "当用户输入 /specpilot:new，想创建新的 SpecPilot 需求、开始新功能或变更请求，或希望在实施前先记录需求时使用。"
 ---
 
 # SpecPilot: 新建需求
@@ -121,4 +121,3 @@ argument-hint: [requirement summary]
 
 **参考文档**
 - 完整规范见 `docs/specpilot/README.md`
-- 提交指南见 `docs/specpilot/requirements/GUIDE-submit-req.md`

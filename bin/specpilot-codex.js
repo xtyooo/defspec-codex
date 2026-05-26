@@ -19,22 +19,17 @@ import { homedir } from 'os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const PKG = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'));
-const COMMANDS_SRC = resolve(ROOT, 'commands');
-const ASSETS_SRC = resolve(ROOT, 'assets');
-const PLUGIN_MANIFEST_SRC = resolve(ROOT, '.codex-plugin');
+const SKILLS_SRC = resolve(ROOT, 'skills');
 const DOCS_SRC = resolve(ROOT, 'templates', 'docs', 'specpilot');
 const AGENTS_SECTION_SRC = resolve(ROOT, 'templates', 'agents', 'AGENTS.section.md');
 const PROJECT_DIR = process.cwd();
-const CODEX_SKILLS_DIR = resolve(homedir(), '.agents', 'skills', 'specpilot');
-const CODEX_PLUGIN_NAME = 'specpilot';
-const CODEX_MARKETPLACE_NAME = 'specpilot-local';
-const CODEX_PLUGIN_DIR = resolve(homedir(), 'plugins', CODEX_PLUGIN_NAME);
+const PROJECT_CODEX_SKILLS_DIR = resolve(PROJECT_DIR, '.codex', 'skills');
+const LEGACY_GLOBAL_SPEC_SKILLS_DIR = resolve(homedir(), '.agents', 'skills', 'specpilot');
+const LEGACY_GLOBAL_DEFSPEC_SKILLS_DIR = resolve(homedir(), '.agents', 'skills', 'defspec');
+const LEGACY_PLUGIN_DIR = resolve(homedir(), 'plugins', 'specpilot');
+const LEGACY_DEFSPEC_PLUGIN_DIR = resolve(homedir(), 'plugins', 'defspec');
 const CODEX_MARKETPLACE_PATH = resolve(homedir(), '.agents', 'plugins', 'marketplace.json');
 const CODEX_CONFIG_PATH = resolve(homedir(), '.codex', 'config.toml');
-const LEGACY_CODEX_SKILLS_DIR = resolve(homedir(), '.agents', 'skills', 'defspec');
-const LEGACY_CODEX_PLUGIN_NAME = 'defspec';
-const LEGACY_CODEX_MARKETPLACE_NAME = 'defspec-local';
-const LEGACY_CODEX_PLUGIN_DIR = resolve(homedir(), 'plugins', LEGACY_CODEX_PLUGIN_NAME);
 
 const SENTINEL_BEGIN = '<!-- specpilot-codex:begin (do not edit between these markers) -->';
 const SENTINEL_END = '<!-- specpilot-codex:end -->';
@@ -73,18 +68,21 @@ function copyDirSync(src, dest) {
   }
 }
 
-function countSpecPilotSkillDirs(dir) {
-  if (!existsSync(dir)) return 0;
-  return readdirSync(dir, { withFileTypes: true }).filter((entry) => {
-    return entry.isDirectory() && isSpecPilotSkillDir(resolve(dir, entry.name));
-  }).length;
+function isHomeDir(path) {
+  try {
+    return realpathSync(path).toLowerCase() === realpathSync(homedir()).toLowerCase();
+  } catch {
+    return resolve(path).toLowerCase() === resolve(homedir()).toLowerCase();
+  }
 }
 
-function sourceCommandNames() {
-  if (!existsSync(COMMANDS_SRC)) return [];
-  return readdirSync(COMMANDS_SRC, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.md') && !entry.name.startsWith('_'))
-    .map((entry) => entry.name.replace(/\.md$/, ''));
+function sourceSkillNames() {
+  if (!existsSync(SKILLS_SRC)) return [];
+  return readdirSync(SKILLS_SRC, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith('specpilot-'))
+    .filter((entry) => existsSync(resolve(SKILLS_SRC, entry.name, 'SKILL.md')))
+    .map((entry) => entry.name)
+    .sort();
 }
 
 function isSpecPilotSkillDir(path) {
@@ -95,7 +93,7 @@ function isSpecPilotSkillDir(path) {
 
 function cleanupSkillDirs(parentDir, label) {
   if (!existsSync(parentDir)) {
-    console.log(`  ✅ No ${label} found`);
+    console.log(`  OK no ${label} found`);
     return 0;
   }
 
@@ -108,51 +106,20 @@ function cleanupSkillDirs(parentDir, label) {
     removed++;
   }
 
-  try {
-    if (readdirSync(parentDir).length === 0 && parentDir.endsWith(`${CODEX_PLUGIN_NAME}`)) {
-      rmSync(parentDir, { recursive: true, force: true });
-    }
-  } catch {}
-
-  console.log(`  ✅ Removed ${removed} ${label} entr${removed === 1 ? 'y' : 'ies'}`);
+  console.log(`  OK removed ${removed} ${label} entr${removed === 1 ? 'y' : 'ies'}`);
   return removed;
 }
 
-function cleanupLegacySpecPilotSkills() {
-  cleanupSkillDirs(CODEX_SKILLS_DIR, 'legacy SpecPilot global skills');
-  cleanupSkillDirs(resolve(CODEX_PLUGIN_DIR, 'skills'), 'legacy SpecPilot plugin skills');
-  cleanupSkillDirs(resolve(PROJECT_DIR, '.codex', 'skills'), 'legacy project SpecPilot/DefSpec skills');
-  cleanupSkillDirs(LEGACY_CODEX_SKILLS_DIR, 'legacy DefSpec global skills');
-  cleanupSkillDirs(resolve(LEGACY_CODEX_PLUGIN_DIR, 'skills'), 'legacy DefSpec plugin skills');
-}
+function installProjectSkills() {
+  const skills = sourceSkillNames();
+  if (skills.length === 0) throw new Error(`No SpecPilot skills found in ${SKILLS_SRC}`);
 
-function isHomeDir(path) {
-  try {
-    return realpathSync(path).toLowerCase() === realpathSync(homedir()).toLowerCase();
-  } catch {
-    return resolve(path).toLowerCase() === resolve(homedir()).toLowerCase();
+  mkdirSync(PROJECT_CODEX_SKILLS_DIR, { recursive: true });
+  cleanupSkillDirs(PROJECT_CODEX_SKILLS_DIR, 'project SpecPilot skills');
+  for (const skill of skills) {
+    copyDirSync(resolve(SKILLS_SRC, skill), resolve(PROJECT_CODEX_SKILLS_DIR, skill));
   }
-}
-
-function showHelp() {
-  console.log(`
-specpilot-codex v${PKG.version}
-
-Usage:
-  npx specpilot-codex                 Install Codex /specpilot commands and initialize this project
-  npx specpilot-codex --skills-only   Install/update global Codex command integration only
-  npx specpilot-codex --integration-only
-  npx specpilot-codex --init-only     Initialize current project only
-  npx specpilot-codex --with-agents   Also write the optional AGENTS.md SpecPilot bootstrap
-  npx specpilot-codex --check         Check current installation
-  npx specpilot-codex --uninstall     Remove current project SpecPilot files
-  npx specpilot-codex --uninstall --skills-only
-  npx specpilot-codex --no-guide-prompt
-  npx specpilot-codex --yes           Overwrite existing template files
-  npx specpilot-codex --force         Allow project init in home directory
-
-After installing, restart Codex and type /specpilot to discover SpecPilot commands.
-`);
+  console.log(`  OK Codex skills: ${skills.length} installed -> ${PROJECT_CODEX_SKILLS_DIR}`);
 }
 
 function removeMarkedSection(content, begin, endMarker, label) {
@@ -200,55 +167,6 @@ function writeJsonFile(path, payload) {
   writeFileSync(path, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 }
 
-function installPluginBundle() {
-  if (!existsSync(PLUGIN_MANIFEST_SRC)) throw new Error(`Missing plugin manifest source: ${PLUGIN_MANIFEST_SRC}`);
-  if (!existsSync(COMMANDS_SRC)) throw new Error(`Missing commands source: ${COMMANDS_SRC}`);
-
-  rmSync(CODEX_PLUGIN_DIR, { recursive: true, force: true });
-  mkdirSync(CODEX_PLUGIN_DIR, { recursive: true });
-  copyDirSync(PLUGIN_MANIFEST_SRC, resolve(CODEX_PLUGIN_DIR, '.codex-plugin'));
-  copyDirSync(COMMANDS_SRC, resolve(CODEX_PLUGIN_DIR, 'commands'));
-  if (existsSync(ASSETS_SRC)) copyDirSync(ASSETS_SRC, resolve(CODEX_PLUGIN_DIR, 'assets'));
-  console.log(`  ✅ Codex plugin commands: ${sourceCommandNames().length} installed -> ${CODEX_PLUGIN_DIR}`);
-}
-
-function installMarketplace() {
-  const payload = readJsonFile(CODEX_MARKETPLACE_PATH, {
-    name: CODEX_MARKETPLACE_NAME,
-    interface: { displayName: 'SpecPilot Local' },
-    plugins: [],
-  });
-
-  if (!payload.name) payload.name = CODEX_MARKETPLACE_NAME;
-  if (!payload.interface || typeof payload.interface !== 'object') payload.interface = { displayName: 'SpecPilot Local' };
-  if (!Array.isArray(payload.plugins)) payload.plugins = [];
-
-  const entry = {
-    name: CODEX_PLUGIN_NAME,
-    source: {
-      source: 'local',
-      path: './plugins/specpilot',
-    },
-    policy: {
-      installation: 'AVAILABLE',
-      authentication: 'ON_INSTALL',
-    },
-    category: 'Coding',
-  };
-
-  payload.plugins = payload.plugins.filter((plugin) => !plugin || plugin.name !== LEGACY_CODEX_PLUGIN_NAME);
-  const index = payload.plugins.findIndex((plugin) => plugin && plugin.name === CODEX_PLUGIN_NAME);
-  if (index === -1) payload.plugins.push(entry);
-  else payload.plugins[index] = entry;
-
-  writeJsonFile(CODEX_MARKETPLACE_PATH, payload);
-  console.log(`  ✅ Codex marketplace -> ${CODEX_MARKETPLACE_PATH}`);
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function normalizeTomlNewlines(content) {
   return content.replace(/\r\n/g, '\n');
 }
@@ -271,62 +189,60 @@ function removeTomlBlockContent(content, header) {
   return kept.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
 }
 
-function cleanupSpecPilotConfigFragments(content) {
-  let next = normalizeTomlNewlines(content);
-  next = removeTomlBlockContent(next, `marketplaces.${CODEX_MARKETPLACE_NAME}`);
-  next = removeTomlBlockContent(next, `plugins."${CODEX_PLUGIN_NAME}@${CODEX_MARKETPLACE_NAME}"`);
-  next = removeTomlBlockContent(next, `marketplaces.${LEGACY_CODEX_MARKETPLACE_NAME}`);
-  next = removeTomlBlockContent(next, `plugins."${LEGACY_CODEX_PLUGIN_NAME}@${LEGACY_CODEX_MARKETPLACE_NAME}"`);
-
-  const lines = next.split('\n');
-  const cleaned = [];
-  for (let index = 0; index < lines.length; index++) {
-    const current = lines[index];
-    const following = lines[index + 1] ?? '';
-    const isSpecPilotSourcePair = /^source_type\s*=\s*"local"\s*$/.test(current)
-      && following === `source = ${quoteTomlString(homedir())}`;
-    if (isSpecPilotSourcePair) {
-      index++;
-      continue;
-    }
-    cleaned.push(current);
+function cleanupLegacyPluginConfig() {
+  if (existsSync(LEGACY_PLUGIN_DIR)) {
+    rmSync(LEGACY_PLUGIN_DIR, { recursive: true, force: true });
+    console.log(`  OK removed legacy SpecPilot plugin -> ${LEGACY_PLUGIN_DIR}`);
+  }
+  if (existsSync(LEGACY_DEFSPEC_PLUGIN_DIR)) {
+    rmSync(LEGACY_DEFSPEC_PLUGIN_DIR, { recursive: true, force: true });
+    console.log(`  OK removed legacy DefSpec plugin -> ${LEGACY_DEFSPEC_PLUGIN_DIR}`);
   }
 
-  return cleaned.join('\n').replace(/\n{3,}/g, '\n\n').trimEnd() + '\n';
+  if (existsSync(CODEX_MARKETPLACE_PATH)) {
+    const payload = readJsonFile(CODEX_MARKETPLACE_PATH, null);
+    if (payload && Array.isArray(payload.plugins)) {
+      const before = payload.plugins.length;
+      payload.plugins = payload.plugins.filter((plugin) => !plugin || !['specpilot', 'defspec'].includes(plugin.name));
+      if (payload.plugins.length !== before) {
+        writeJsonFile(CODEX_MARKETPLACE_PATH, payload);
+        console.log(`  OK removed legacy marketplace entries -> ${CODEX_MARKETPLACE_PATH}`);
+      }
+    }
+  }
+
+  if (existsSync(CODEX_CONFIG_PATH)) {
+    let next = readFileSync(CODEX_CONFIG_PATH, 'utf8');
+    for (const header of [
+      'marketplaces.specpilot-local',
+      'plugins."specpilot@specpilot-local"',
+      'marketplaces.defspec-local',
+      'plugins."defspec@defspec-local"',
+    ]) {
+      next = removeTomlBlockContent(next, header);
+    }
+    writeFileSync(CODEX_CONFIG_PATH, next, 'utf8');
+    console.log(`  OK removed legacy Codex plugin config -> ${CODEX_CONFIG_PATH}`);
+  }
 }
 
-function upsertTomlBlock(content, header, body) {
-  const block = `[${header}]\n${body.trimEnd()}\n`;
-  const withoutExisting = removeTomlBlockContent(cleanupSpecPilotConfigFragments(content), header).trimEnd();
-  return `${withoutExisting}\n\n${block}`;
-}
-function quoteTomlString(value) {
-  return `'${value.replace(/'/g, "''")}'`;
-}
-
-function installCodexConfig() {
-  const existing = cleanupSpecPilotConfigFragments(existsSync(CODEX_CONFIG_PATH) ? readFileSync(CODEX_CONFIG_PATH, 'utf8') : '');
-  const marketplaceBlock = `[marketplaces.${CODEX_MARKETPLACE_NAME}]\nlast_updated = "${new Date().toISOString()}"\nsource_type = "local"\nsource = ${quoteTomlString(homedir())}\n`;
-  const pluginBlock = `[plugins."${CODEX_PLUGIN_NAME}@${CODEX_MARKETPLACE_NAME}"]\nenabled = true\n`;
-  const next = `${existing.trimEnd()}\n\n${marketplaceBlock}\n${pluginBlock}`;
-  mkdirSync(dirname(CODEX_CONFIG_PATH), { recursive: true });
-  writeFileSync(CODEX_CONFIG_PATH, next.trimEnd() + '\n', 'utf8');
-  console.log(`  ✅ Codex config enabled -> ${CODEX_CONFIG_PATH}`);
+function cleanupLegacySkillLocations() {
+  cleanupSkillDirs(LEGACY_GLOBAL_SPEC_SKILLS_DIR, 'legacy global SpecPilot skills');
+  cleanupSkillDirs(LEGACY_GLOBAL_DEFSPEC_SKILLS_DIR, 'legacy global DefSpec skills');
+  cleanupSkillDirs(resolve(LEGACY_PLUGIN_DIR, 'skills'), 'legacy plugin SpecPilot skills');
+  cleanupSkillDirs(resolve(LEGACY_DEFSPEC_PLUGIN_DIR, 'skills'), 'legacy plugin DefSpec skills');
 }
 
 function installCodexIntegration() {
-  cleanupLegacySpecPilotSkills();
-  cleanupLegacyDefSpecPluginBundle();
-  installPluginBundle();
-  installMarketplace();
-  installCodexConfig();
+  cleanupLegacySkillLocations();
+  cleanupLegacyPluginConfig();
+  installProjectSkills();
 }
 
-function cleanupLegacyDefSpecPluginBundle() {
-  if (existsSync(LEGACY_CODEX_PLUGIN_DIR)) {
-    rmSync(LEGACY_CODEX_PLUGIN_DIR, { recursive: true, force: true });
-    console.log(`  ✅ Removed legacy DefSpec plugin -> ${LEGACY_CODEX_PLUGIN_DIR}`);
-  }
+function uninstallCodexIntegration() {
+  cleanupSkillDirs(PROJECT_CODEX_SKILLS_DIR, 'project SpecPilot skills');
+  cleanupLegacySkillLocations();
+  cleanupLegacyPluginConfig();
 }
 
 function updateAgentsBootstrap({ withAgents }) {
@@ -336,7 +252,7 @@ function updateAgentsBootstrap({ withAgents }) {
     const result = removeSentinelSection(readFileSync(agentsPath, 'utf8'));
     if (result.removed) {
       writeFileSync(agentsPath, result.content, 'utf8');
-      console.log(`  ✅ Removed legacy AGENTS.md SpecPilot bootstrap -> ${agentsPath}`);
+      console.log(`  OK removed legacy AGENTS.md SpecPilot bootstrap -> ${agentsPath}`);
     }
     return;
   }
@@ -346,9 +262,9 @@ function updateAgentsBootstrap({ withAgents }) {
   const next = replaceSentinelSection(existing, section);
   if (next !== existing) {
     writeFileSync(agentsPath, next, 'utf8');
-    console.log(`  ✅ AGENTS.md updated -> ${agentsPath}`);
+    console.log(`  OK AGENTS.md updated -> ${agentsPath}`);
   } else {
-    console.log('  ✅ AGENTS.md already up to date');
+    console.log('  OK AGENTS.md already up to date');
   }
 }
 
@@ -359,11 +275,11 @@ function initProject({ force, yes, withAgents }) {
 
   const docsDest = resolve(PROJECT_DIR, 'docs', 'specpilot');
   if (existsSync(docsDest) && !yes) {
-    console.log(`  ℹ️  docs/specpilot already exists; keeping existing files. Pass --yes to overwrite templates.`);
+    console.log(`  INFO docs/specpilot already exists; keeping existing files. Pass --yes to overwrite templates.`);
   } else {
     mkdirSync(resolve(PROJECT_DIR, 'docs'), { recursive: true });
     copyDirSync(DOCS_SRC, docsDest);
-    console.log(`  ✅ Project docs -> ${docsDest}`);
+    console.log(`  OK project docs -> ${docsDest}`);
   }
 
   updateAgentsBootstrap({ withAgents });
@@ -414,10 +330,6 @@ async function promptProjectGuideInit({ skip }) {
     project-guide.md is the project map Codex reads before future SpecPilot work.
     If it stays as a template, Codex may miss your module boundaries, build commands,
     generated-code rules, test strategy, and files that should not be touched.
-
-  What "initialize" means:
-    Codex should inspect this repository, then replace the placeholder sections in
-    docs/specpilot/project-guide.md with project-specific guidance.
 `);
 
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
@@ -449,87 +361,26 @@ ${buildProjectGuidePrompt()}
 }
 
 function checkInstall() {
-  const commands = sourceCommandNames();
+  const skills = sourceSkillNames();
   console.log(`\nspecpilot-codex v${PKG.version} check\n`);
   console.log(`  Project: ${PROJECT_DIR}`);
-  console.log(`  Canonical entry: /specpilot:* commands`);
-  console.log(`  Codex plugin dir: ${CODEX_PLUGIN_DIR}`);
-  for (const name of commands) {
-    const ok = existsSync(resolve(CODEX_PLUGIN_DIR, 'commands', `${name}.md`));
-    console.log(`  ${ok ? '✅' : '❌'} command /specpilot:${name}`);
+  console.log(`  Codex skills dir: ${PROJECT_CODEX_SKILLS_DIR}`);
+  for (const skill of skills) {
+    const ok = existsSync(resolve(PROJECT_CODEX_SKILLS_DIR, skill, 'SKILL.md'));
+    console.log(`  ${ok ? 'OK' : 'MISSING'} skill ${skill}`);
   }
-  const hasManifest = existsSync(resolve(CODEX_PLUGIN_DIR, '.codex-plugin', 'plugin.json'));
-  console.log(`  ${hasManifest ? '✅' : '❌'} plugin manifest`);
-  const manifestContent = hasManifest ? readFileSync(resolve(CODEX_PLUGIN_DIR, '.codex-plugin', 'plugin.json'), 'utf8') : '';
-  const manifestExposesSkills = /"skills"\s*:/.test(manifestContent);
-  console.log(`  ${!manifestExposesSkills ? '✅' : '❌'} plugin manifest does not expose skills`);
-  const legacyGlobalSkills = countSpecPilotSkillDirs(CODEX_SKILLS_DIR);
-  const legacyPluginSkills = countSpecPilotSkillDirs(resolve(CODEX_PLUGIN_DIR, 'skills'));
-  const legacyProjectSkills = countSpecPilotSkillDirs(resolve(PROJECT_DIR, '.codex', 'skills'));
-  const legacyDefSpecGlobalSkills = countSpecPilotSkillDirs(LEGACY_CODEX_SKILLS_DIR);
-  console.log(`  ${legacyGlobalSkills === 0 ? '✅' : '❌'} no legacy global SpecPilot skills`);
-  console.log(`  ${legacyPluginSkills === 0 ? '✅' : '❌'} no legacy plugin SpecPilot skills`);
-  console.log(`  ${legacyProjectSkills === 0 ? '✅' : '❌'} no legacy project SpecPilot skills`);
-  console.log(`  ${legacyDefSpecGlobalSkills === 0 ? '✅' : '❌'} no legacy DefSpec global skills`);
-  const hasMarketplace = existsSync(CODEX_MARKETPLACE_PATH) && readFileSync(CODEX_MARKETPLACE_PATH, 'utf8').includes('"name": "specpilot"');
-  console.log(`  ${hasMarketplace ? '✅' : '❌'} marketplace entry`);
-  const configContent = existsSync(CODEX_CONFIG_PATH) ? readFileSync(CODEX_CONFIG_PATH, 'utf8') : '';
-  const pluginConfigMatches = configContent.match(new RegExp(`\\[plugins\\."${escapeRegExp(CODEX_PLUGIN_NAME)}@${escapeRegExp(CODEX_MARKETPLACE_NAME)}"\\]`, 'g')) ?? [];
-  const marketplaceConfigMatches = configContent.match(new RegExp(`\\[marketplaces\\.${escapeRegExp(CODEX_MARKETPLACE_NAME)}\\]`, 'g')) ?? [];
-  const hasConfig = pluginConfigMatches.length === 1 && marketplaceConfigMatches.length === 1;
-  console.log(`  ${hasConfig ? '✅' : '❌'} Codex plugin enabled`);
-  const hasLegacyPluginDir = existsSync(LEGACY_CODEX_PLUGIN_DIR);
-  console.log(`  ${!hasLegacyPluginDir ? '✅' : '❌'} no legacy DefSpec plugin`);
-  console.log(`  ${existsSync(resolve(PROJECT_DIR, 'docs', 'specpilot', 'SPECPILOT.md')) ? '✅' : '❌'} docs/specpilot`);
+  console.log(`  ${existsSync(resolve(PROJECT_DIR, 'docs', 'specpilot', 'SPECPILOT.md')) ? 'OK' : 'MISSING'} docs/specpilot`);
+
   const agentsPath = resolve(PROJECT_DIR, 'AGENTS.md');
   const agentsContent = existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : '';
   const hasAgents = agentsContent.includes(SENTINEL_BEGIN);
-  const hasLegacyAgentsSkillText = /\.codex[\\/]skills|local Codex skills|Codex skills installed by `specpilot-codex`/i.test(agentsContent);
-  console.log(`  ${hasAgents ? 'ℹ️ ' : '✅'} AGENTS.md SpecPilot bootstrap ${hasAgents ? 'present (optional)' : 'not installed by default'}`);
-  if (!hasAgents && hasLegacyAgentsSkillText) {
-    console.log('  ℹ️  AGENTS.md contains legacy SpecPilot skill wording; it is safe to keep, but /specpilot commands no longer need it');
-  }
-}
+  console.log(`  ${hasAgents ? 'INFO' : 'OK'} AGENTS.md SpecPilot bootstrap ${hasAgents ? 'present (optional)' : 'not installed by default'}`);
 
-function uninstallSkills() {
-  cleanupLegacySpecPilotSkills();
-}
-
-function removeTomlBlock(content, header) {
-  return cleanupSpecPilotConfigFragments(removeTomlBlockContent(content, header));
-}
-
-function uninstallPluginBundle() {
-  if (existsSync(CODEX_PLUGIN_DIR)) {
-    rmSync(CODEX_PLUGIN_DIR, { recursive: true, force: true });
-    console.log(`  ✅ Removed Codex plugin -> ${CODEX_PLUGIN_DIR}`);
-  }
-
-  if (existsSync(CODEX_MARKETPLACE_PATH)) {
-    const payload = readJsonFile(CODEX_MARKETPLACE_PATH, null);
-    if (payload && Array.isArray(payload.plugins)) {
-      const before = payload.plugins.length;
-      payload.plugins = payload.plugins.filter((plugin) => !plugin || plugin.name !== CODEX_PLUGIN_NAME);
-      if (payload.plugins.length !== before) {
-        writeJsonFile(CODEX_MARKETPLACE_PATH, payload);
-        console.log(`  ✅ Removed marketplace entry -> ${CODEX_MARKETPLACE_PATH}`);
-      }
-    }
-  }
-
-  if (existsSync(CODEX_CONFIG_PATH)) {
-    let next = readFileSync(CODEX_CONFIG_PATH, 'utf8');
-    next = removeTomlBlock(next, `plugins."${CODEX_PLUGIN_NAME}@${CODEX_MARKETPLACE_NAME}"`);
-    next = removeTomlBlock(next, `marketplaces.${CODEX_MARKETPLACE_NAME}`);
-    writeFileSync(CODEX_CONFIG_PATH, next, 'utf8');
-    console.log(`  ✅ Removed Codex config entries -> ${CODEX_CONFIG_PATH}`);
-  }
-  cleanupLegacyDefSpecPluginBundle();
-}
-
-function uninstallCodexIntegration() {
-  uninstallSkills();
-  uninstallPluginBundle();
+  const legacyPlugin = existsSync(LEGACY_PLUGIN_DIR);
+  const legacyConfig = existsSync(CODEX_CONFIG_PATH)
+    && /specpilot-local|plugins\."specpilot@specpilot-local"/.test(readFileSync(CODEX_CONFIG_PATH, 'utf8'));
+  console.log(`  ${!legacyPlugin ? 'OK' : 'LEGACY'} no legacy SpecPilot plugin directory`);
+  console.log(`  ${!legacyConfig ? 'OK' : 'LEGACY'} no legacy SpecPilot plugin config`);
 }
 
 function uninstallProject() {
@@ -538,15 +389,36 @@ function uninstallProject() {
     const result = removeSentinelSection(readFileSync(agentsPath, 'utf8'));
     if (result.removed) {
       writeFileSync(agentsPath, result.content, 'utf8');
-      console.log(`  ✅ Removed AGENTS.md bootstrap -> ${agentsPath}`);
+      console.log(`  OK removed AGENTS.md bootstrap -> ${agentsPath}`);
     }
   }
 
   const docsDest = resolve(PROJECT_DIR, 'docs', 'specpilot');
   if (existsSync(docsDest)) {
     rmSync(docsDest, { recursive: true, force: true });
-    console.log(`  ✅ Removed project docs -> ${docsDest}`);
+    console.log(`  OK removed project docs -> ${docsDest}`);
   }
+}
+
+function showHelp() {
+  console.log(`
+specpilot-codex v${PKG.version}
+
+Usage:
+  npx specpilot-codex                 Install Codex SpecPilot skills and initialize this project
+  npx specpilot-codex --skills-only   Install/update project Codex skills only
+  npx specpilot-codex --integration-only
+  npx specpilot-codex --init-only     Initialize current project docs only
+  npx specpilot-codex --with-agents   Also write the optional AGENTS.md SpecPilot bootstrap
+  npx specpilot-codex --check         Check current installation
+  npx specpilot-codex --uninstall     Remove current project SpecPilot docs and skills
+  npx specpilot-codex --uninstall --skills-only
+  npx specpilot-codex --no-guide-prompt
+  npx specpilot-codex --yes           Overwrite existing template files
+  npx specpilot-codex --force         Allow project init in home directory
+
+After installing, restart Codex if the new skills are not visible yet.
+`);
 }
 
 const args = process.argv.slice(2);
@@ -573,15 +445,15 @@ try {
     console.log(`\nspecpilot-codex v${PKG.version} uninstall\n`);
     if (!initOnly) uninstallCodexIntegration();
     if (!skillsOnly) uninstallProject();
-    console.log('\n  Uninstall complete. Restart Codex if integration changed.\n');
+    console.log('\n  Uninstall complete. Restart Codex if skills changed.\n');
   } else {
     console.log(`\nspecpilot-codex v${PKG.version}\n`);
     if (!initOnly) installCodexIntegration();
     if (!skillsOnly) initProject({ force, yes, withAgents });
     if (!skillsOnly) await promptProjectGuideInit({ skip: noGuidePrompt });
-    console.log('\n  Install complete. Restart Codex, then type /specpilot in the composer.\n');
+    console.log('\n  Install complete. Restart Codex if skills are not visible yet.\n');
   }
 } catch (error) {
-  console.error(`\n  ❌ ${error.message}\n`);
+  console.error(`\n  ERROR ${error.message}\n`);
   process.exit(1);
 }

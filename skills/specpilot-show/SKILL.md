@@ -1,6 +1,6 @@
 ---
-description: Show details for a SpecPilot requirement or capability spec.
-argument-hint: REQ-xxx|spec-name
+name: specpilot-show
+description: "当用户输入 /specpilot:show REQ-xxx 或 /specpilot:show spec-name，想查看 SpecPilot 需求详情，或查看当前项目中的能力规格时使用。"
 ---
 
 # SpecPilot: 查看详情
@@ -8,13 +8,13 @@ argument-hint: REQ-xxx|spec-name
 查看需求或能力规格的详细内容。
 
 **参数**
-- `$ARGUMENTS` - 要查看的编号（如 REQ-001）或能力名（如 user-auth）
+- `the user-provided arguments after the command text` - 要查看的编号（如 REQ-001）或能力名（如 user-auth）
 
 **执行步骤**
 
 ## 步骤一：解析参数
 
-1. 从 `$ARGUMENTS` 获取要查看的内容（去除空格）
+1. 从 `the user-provided arguments after the command text` 获取要查看的内容（去除空格）
 2. 如果未提供参数，进入交互模式
 
 ## 步骤二：判断类型

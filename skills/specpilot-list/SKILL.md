@@ -1,6 +1,6 @@
 ---
-description: List SpecPilot requirements or capability specs.
-argument-hint: [reqs|specs]
+name: specpilot-list
+description: "当用户输入 /specpilot:list，想列出 SpecPilot 需求、查看需求状态，或查看当前项目中的需求记录和能力规格时使用。"
 ---
 
 # SpecPilot: 查看列表
@@ -8,7 +8,7 @@ argument-hint: [reqs|specs]
 查看当前需求列表和系统能力规格。
 
 **参数**
-- `$ARGUMENTS` - 可选，指定查看类型：`reqs`（需求）或 `specs`（规格）
+- `the user-provided arguments after the command text` - 可选，指定查看类型：`reqs`（需求）或 `specs`（规格）
 
 **执行步骤**
 

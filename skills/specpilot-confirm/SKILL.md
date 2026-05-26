@@ -1,6 +1,6 @@
 ---
-description: Analyze and confirm a SpecPilot requirement with scope, rules, boundaries, and data-flow questions.
-argument-hint: REQ-xxx
+name: specpilot-confirm
+description: "当用户输入 /specpilot:confirm REQ-xxx，想确认 SpecPilot 需求、澄清范围、分析业务规则，或将当前项目中的草稿需求转为已确认需求时使用。"
 ---
 
 # SpecPilot: 需求确认
@@ -8,7 +8,7 @@ argument-hint: REQ-xxx
 分析用户填写的原始需求，识别模糊点和边界条件，提出疑问等待用户确认，确认后整理最终需求文档。
 
 **参数**
-- `$ARGUMENTS` - 要确认的需求编号（如 REQ-001）
+- `the user-provided arguments after the command text` - 要确认的需求编号（如 REQ-001）
 
 **规则约束**
 - 必须先读取项目指南：`docs/specpilot/project-guide.md`
@@ -22,7 +22,7 @@ argument-hint: REQ-xxx
 
 ## 阶段一：准备
 
-1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+1. 从 `the user-provided arguments after the command text` 解析需求编号（去除空格）
 2. 如果未提供编号，运行 `ls docs/specpilot/requirements/` 并询问用户要确认哪个需求
 3. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`
 4. 读取项目指南：`docs/specpilot/project-guide.md`

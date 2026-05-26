@@ -1,6 +1,6 @@
 ---
-description: Deep-check a SpecPilot requirement according to its current status.
-argument-hint: REQ-xxx
+name: specpilot-check
+description: "当用户输入 /specpilot:check REQ-xxx，想复核 SpecPilot 需求、检查实现进度、验证测试情况，或查找当前项目中缺失的需求记录时使用。"
 ---
 
 # SpecPilot: 检查需求
@@ -8,7 +8,7 @@ argument-hint: REQ-xxx
 手动检查当前需求的最新进度，根据不同阶段进行针对性的深度复核。
 
 **参数**
-- `$ARGUMENTS` - 要检查的需求编号（如 REQ-001）
+- `the user-provided arguments after the command text` - 要检查的需求编号（如 REQ-001）
 
 **使用场景**
 - 中断后恢复工作，需要了解当前进度
@@ -20,7 +20,7 @@ argument-hint: REQ-xxx
 
 ## 阶段一：读取需求状态
 
-1. 从 `$ARGUMENTS` 解析需求编号
+1. 从 `the user-provided arguments after the command text` 解析需求编号
 2. 如果未提供编号，运行 `ls docs/specpilot/requirements/` 并询问用户要检查哪个需求
 3. 读取 `docs/specpilot/requirements/index.md` 获取需求当前状态
 4. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`

@@ -13,7 +13,7 @@
 | `/specpilot:archive REQ-xxx` | 归档已完成需求 |
 | `/specpilot:list` | 查看需求列表 |
 
-在 Codex App 中，`specpilot-codex` 提供全局 slash commands。输入 `/specpilot` 后可选择 `SpecPilot New`、`SpecPilot List`、`SpecPilot Confirm`、`SpecPilot Exec` 等动作。
+在 Codex App 中，`specpilot-codex` 将 SpecPilot 安装为当前项目的 `.codex/skills/specpilot-*`。你可以直接输入上面的文本来触发对应 skill；如果界面没有弹出 slash command 菜单，也不影响按文本触发工作流。
 
 ## 标准节奏
 

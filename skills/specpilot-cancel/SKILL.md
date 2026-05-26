@@ -1,6 +1,6 @@
 ---
-description: Cancel a draft or in-progress SpecPilot requirement without losing history.
-argument-hint: REQ-xxx
+name: specpilot-cancel
+description: "当用户输入 /specpilot:cancel REQ-xxx，想取消草稿或进行中的 SpecPilot 需求，或将当前项目中的需求标记为不再计划时使用。"
 ---
 
 # SpecPilot: 取消需求
@@ -8,7 +8,7 @@ argument-hint: REQ-xxx
 取消需求，更新状态并询问是否删除草稿文件。
 
 **参数**
-- `$ARGUMENTS` - 要取消的需求编号（如 REQ-001）
+- `the user-provided arguments after the command text` - 要取消的需求编号（如 REQ-001）
 
 **规则约束**
 - 只能取消 draft 或 in_progress 状态的需求
@@ -19,7 +19,7 @@ argument-hint: REQ-xxx
 
 ## 步骤一：确定需求编号
 
-1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+1. 从 `the user-provided arguments after the command text` 解析需求编号（去除空格）
 2. 如果未提供编号：
    - 读取 `docs/specpilot/requirements/index.md`
    - 列出 draft 和 in_progress 状态的需求

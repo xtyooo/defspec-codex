@@ -1,6 +1,6 @@
 ---
-description: Archive a completed SpecPilot requirement and update indexes and records.
-argument-hint: REQ-xxx
+name: specpilot-archive
+description: "当用户输入 /specpilot:archive REQ-xxx，想归档已完成的 SpecPilot 需求、整理需求记录，或将当前项目中的需求标记为已完成时使用。"
 ---
 
 # SpecPilot: 存档需求
@@ -8,7 +8,7 @@ argument-hint: REQ-xxx
 存档已完成的需求，更新索引文件。
 
 **参数**
-- `$ARGUMENTS` - 要存档的需求编号（如 REQ-001）
+- `the user-provided arguments after the command text` - 要存档的需求编号（如 REQ-001）
 
 **规则约束**
 - 只存档已完成开发的需求
@@ -21,7 +21,7 @@ argument-hint: REQ-xxx
 
 ## 步骤一：确定需求编号
 
-1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+1. 从 `the user-provided arguments after the command text` 解析需求编号（去除空格）
 2. 如果未提供编号：
    - 运行 `ls docs/specpilot/requirements/` 查看文件
    - 读取 `docs/specpilot/requirements/index.md` 找到 `in_progress` 状态的需求

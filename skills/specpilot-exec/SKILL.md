@@ -1,6 +1,6 @@
 ---
-description: Design and execute a SpecPilot requirement with approval gates and code review.
-argument-hint: REQ-xxx
+name: specpilot-exec
+description: "当用户输入 /specpilot:exec REQ-xxx，想执行已确认的 SpecPilot 需求、要求输出技术方案，或确认方案后开始在当前项目中实施时使用。"
 ---
 
 # SpecPilot: 执行需求
@@ -8,7 +8,7 @@ argument-hint: REQ-xxx
 按照 SpecPilot 工作流执行需求。
 
 **参数**
-- `$ARGUMENTS` - 要执行的需求编号（如 REQ-001）
+- `the user-provided arguments after the command text` - 要执行的需求编号（如 REQ-001）
 
 **规则约束**
 - 必须先读取项目指南：`docs/specpilot/project-guide.md`
@@ -24,7 +24,7 @@ argument-hint: REQ-xxx
 
 ## 阶段一：准备
 
-1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+1. 从 `the user-provided arguments after the command text` 解析需求编号（去除空格）
 2. 如果未提供编号，运行 `ls docs/specpilot/requirements/` 并询问用户要执行哪个需求
 3. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`
 4. 读取项目指南：`docs/specpilot/project-guide.md`

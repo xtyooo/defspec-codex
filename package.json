@@ -1,16 +1,14 @@
 {
   "name": "specpilot-codex",
   "version": "1.1.0",
-  "description": "SpecPilot requirement-driven development workflow for Codex with slash-discoverable commands.",
+  "description": "SpecPilot requirement-driven development workflow installed as Codex skills.",
   "type": "module",
   "bin": {
     "specpilot-codex": "bin/specpilot-codex.js"
   },
   "files": [
     "bin/",
-    ".codex-plugin/",
-    "assets/",
-    "commands/",
+    "skills/",
     "templates/",
     "README.md",
     "LICENSE"

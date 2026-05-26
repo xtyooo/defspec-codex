@@ -1,6 +1,6 @@
 ---
-description: Handle a change to an existing SpecPilot requirement.
-argument-hint: REQ-xxx change summary
+name: specpilot-update
+description: "当用户输入 /specpilot:update REQ-xxx，提出需求变更、补充新约束，或想修订当前项目中已完成或进行中的 SpecPilot 需求时使用。"
 ---
 
 # SpecPilot: 更新需求
@@ -8,7 +8,7 @@ argument-hint: REQ-xxx change summary
 处理需求变更，根据需求当前状态和变更范围选择合适的处理方式。
 
 **参数**
-- `$ARGUMENTS` - 格式：`REQ-xxx [变更内容]` 或仅 `REQ-xxx`（变更内容在文档中）
+- `the user-provided arguments after the command text` - 格式：`REQ-xxx [变更内容]` 或仅 `REQ-xxx`（变更内容在文档中）
 
 **使用场景**
 - 开发中的需求有调整
@@ -24,7 +24,7 @@ argument-hint: REQ-xxx change summary
 
 ## 阶段一：读取需求和变更内容
 
-1. 从 `$ARGUMENTS` 解析需求编号和变更内容
+1. 从 `the user-provided arguments after the command text` 解析需求编号和变更内容
 2. 读取 `docs/specpilot/requirements/index.md` 获取需求当前状态
 3. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`
 4. 读取项目指南：`docs/specpilot/project-guide.md`

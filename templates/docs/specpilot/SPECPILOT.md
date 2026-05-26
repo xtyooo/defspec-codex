@@ -106,7 +106,6 @@ docs/specpilot/
 ├── project.md
 ├── project-guide.md
 ├── project-guide-template.md
-├── commands/
 ├── specs/
 └── requirements/
     ├── index.md

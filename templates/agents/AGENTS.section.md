@@ -10,17 +10,17 @@ Before starting requirement-driven work, read:
 3. `docs/specpilot/project-guide.md`
 4. `docs/specpilot/requirements/index.md`
 
-The global commands installed by `specpilot-codex` provide separate `/` entries:
+The project skills installed by `specpilot-codex` provide separate SpecPilot workflows:
 
-- `SpecPilot New`
-- `SpecPilot List`
-- `SpecPilot Confirm`
-- `SpecPilot Exec`
-- `SpecPilot Check`
-- `SpecPilot Show`
-- `SpecPilot Update`
-- `SpecPilot Archive`
-- `SpecPilot Cancel`
+- `specpilot-new`
+- `specpilot-list`
+- `specpilot-confirm`
+- `specpilot-exec`
+- `specpilot-check`
+- `specpilot-show`
+- `specpilot-update`
+- `specpilot-archive`
+- `specpilot-cancel`
 
 Use SpecPilot for new capabilities, user-visible behavior changes, cross-module work, data/interface/worker changes, and requests mentioning `REQ-xxx` or SpecPilot. Small bug fixes, typo changes, and tests for existing behavior may skip the full flow.
 
