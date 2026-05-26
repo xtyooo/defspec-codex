@@ -1,7 +1,7 @@
 {
   "name": "defspec",
-  "version": "0.2.2",
-  "description": "DefSpec requirement-driven development workflow for Codex with slash-discoverable commands and skills.",
+  "version": "0.2.3",
+  "description": "DefSpec requirement-driven development workflow for Codex with slash-discoverable commands.",
   "author": {
     "name": "xtyooo",
     "url": "https://github.com/xtyooo"
@@ -16,11 +16,10 @@
     "slash-commands",
     "spec-driven-development"
   ],
-  "skills": "./skills/",
   "interface": {
     "displayName": "DefSpec",
     "shortDescription": "Requirement-driven development commands for Codex",
-    "longDescription": "DefSpec adds slash-discoverable Codex commands and skills for creating, confirming, executing, checking, updating, archiving, and cancelling requirement records before implementation.",
+    "longDescription": "DefSpec adds slash-discoverable Codex commands for creating, confirming, executing, checking, updating, archiving, and cancelling requirement records before implementation.",
     "developerName": "xtyooo",
     "category": "Coding",
     "capabilities": [

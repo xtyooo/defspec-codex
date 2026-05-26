@@ -2,7 +2,9 @@
 
 > 让 Codex 在写代码前先读定义、建需求、确认边界、出方案，再进入实现。
 
-`defspec-codex` 是一套面向 Codex 的 DefSpec 工作流安装器。它会安装 Codex 本地插件命令、配套 skills，并在当前项目中初始化 `docs/defspec/` 需求文档体系。
+`defspec-codex` 是一套面向 Codex 的 DefSpec 工作流安装器。它会安装 Codex 本地插件命令，并在当前项目中初始化 `docs/defspec/` 需求文档体系。
+
+当前版本采用 **commands-only** 模式：唯一推荐入口是 `/defspec:*`，不会再把 DefSpec 同时注册成全局 skills、项目 skills 或插件 skills，避免 `/` 菜单出现多组重复项。
 
 ---
 
@@ -45,11 +47,11 @@ Codex：先出技术方案，确认后再编码、测试、记录结果
 | 能力 | 说明 |
 |------|------|
 | `/defspec:*` 命令 | 安装 8 个 Codex slash commands，输入 `/defspec` 可筛选动作 |
-| DefSpec skills | 安装 8 个配套 skills，确保 Codex 执行命令时遵循 DefSpec 工作流 |
+| 唯一入口 | 默认清理旧版本遗留的 DefSpec skills，只保留 `/defspec:*` 命令入口 |
 | 需求文档体系 | 初始化 `docs/defspec/requirements/`、`specs/`、项目指南模板 |
 | Codex 项目引导 | 向 `AGENTS.md` 写入 DefSpec bootstrap 段落 |
 | 可重复安装 | 使用哨兵注释更新 `AGENTS.md`，重复运行不会无限追加 |
-| 可检查 | `--check` 检查 commands、skills、插件启用状态和当前项目初始化状态 |
+| 可检查 | `--check` 检查 commands、历史重复入口、插件启用状态和当前项目初始化状态 |
 | 可卸载 | `--uninstall` 清理安装的项目段落和模板 |
 
 ---
@@ -99,18 +101,53 @@ npx github:xtyooo/defspec-codex --check
 
 ---
 
+## `/` 和 `$` 的区别
+
+在 Codex 里，`/` 更适合做日常命令入口。它会展示 slash commands，也可能展示项目、个人或插件作用域里的可发现 skills。
+
+`$` 更偏向显式引用某个 skill。它适合在对话里点名加载能力，但不适合作为 DefSpec 的主入口。
+
+旧版本同时安装了多份 DefSpec：
+
+- 项目内 `.codex/skills/defspec-*`
+- 个人目录 `~/.agents/skills/defspec/defspec-*`
+- 插件目录 `~/plugins/defspec/skills/defspec-*`
+- 插件命令 `~/plugins/defspec/commands/*.md`
+
+因此输入 `/` 时会看到多组重复的 `DefSpec New`、`DefSpec Check` 等入口。现在安装器会主动清理前三类历史 skills，只保留插件命令。最终你只需要记住一个入口：
+
+```text
+/defspec
+```
+
+如果升级后仍看到重复项，请先完整退出并重新打开 Codex，再运行：
+
+```bash
+npx github:xtyooo/defspec-codex --check
+```
+
+`--check` 会确认历史 DefSpec skills 是否已经清理干净，以及 `/defspec:*` 命令是否可用。
+
+---
+
 ## 安装模式
 
-完整安装：安装 Codex 本地插件命令、全局 skills，并初始化当前项目。
+完整安装：安装 Codex 本地插件命令、清理旧版重复 skills，并初始化当前项目。
 
 ```bash
 npx github:xtyooo/defspec-codex
 ```
 
-只安装 `/defspec:*` 命令和 skills，不改当前项目：
+只安装 `/defspec:*` 命令并清理旧版重复 skills，不改当前项目：
 
 ```bash
 npx github:xtyooo/defspec-codex --skills-only
+```
+
+`--skills-only` 为兼容旧命令名保留，实际含义是「只更新全局 Codex 集成」。也可以使用更直观的别名：
+
+```bash
+npx github:xtyooo/defspec-codex --integration-only
 ```
 
 只初始化当前项目，不改全局 Codex 集成：
@@ -153,7 +190,6 @@ Codex 本地插件：
 ~/plugins/defspec/
 ├── .codex-plugin/plugin.json
 ├── commands/
-├── skills/
 └── assets/
 ```
 
@@ -162,12 +198,6 @@ Codex marketplace 注册：
 ```text
 ~/.agents/plugins/marketplace.json
 ~/.codex/config.toml
-```
-
-全局 DefSpec skills：
-
-```text
-~/.agents/skills/defspec/defspec-*
 ```
 
 当前项目文件：
@@ -287,6 +317,7 @@ node bin/defspec-codex.js --init-only
 - 默认拒绝在用户主目录初始化项目，避免污染全局环境。
 - 已存在 `docs/defspec/` 时默认不覆盖，除非传入 `--yes`。
 - `AGENTS.md` 使用 `defspec-codex:begin/end` 哨兵注释，便于重复安装和卸载。
+- 安装时只清理名称为 `defspec-*` 且包含 `SKILL.md` 的历史 DefSpec skill 目录，不会删除其他用户 skills。
 - 卸载不会删除你的业务代码。
 
 ---

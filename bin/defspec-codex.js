@@ -19,7 +19,6 @@ import { homedir } from 'os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const PKG = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'));
-const SKILLS_SRC = resolve(ROOT, 'skills');
 const COMMANDS_SRC = resolve(ROOT, 'commands');
 const ASSETS_SRC = resolve(ROOT, 'assets');
 const PLUGIN_MANIFEST_SRC = resolve(ROOT, '.codex-plugin');
@@ -68,17 +67,11 @@ function copyDirSync(src, dest) {
   }
 }
 
-function countSkillDirs(dir) {
+function countDefSpecSkillDirs(dir) {
   if (!existsSync(dir)) return 0;
   return readdirSync(dir, { withFileTypes: true }).filter((entry) => {
-    return entry.isDirectory() && existsSync(resolve(dir, entry.name, 'SKILL.md'));
+    return entry.isDirectory() && isDefSpecSkillDir(resolve(dir, entry.name));
   }).length;
-}
-
-function sourceSkillNames() {
-  return readdirSync(SKILLS_SRC, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
 }
 
 function sourceCommandNames() {
@@ -86,6 +79,43 @@ function sourceCommandNames() {
   return readdirSync(COMMANDS_SRC, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith('.md') && !entry.name.startsWith('_'))
     .map((entry) => entry.name.replace(/\.md$/, ''));
+}
+
+function isDefSpecSkillDir(path) {
+  if (!existsSync(resolve(path, 'SKILL.md'))) return false;
+  const name = path.split(/[\\/]/).pop() ?? '';
+  return name.startsWith('defspec-');
+}
+
+function cleanupDefSpecSkillDirs(parentDir, label) {
+  if (!existsSync(parentDir)) {
+    console.log(`  ✅ No legacy DefSpec skills found in ${label}`);
+    return 0;
+  }
+
+  let removed = 0;
+  for (const entry of readdirSync(parentDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const target = resolve(parentDir, entry.name);
+    if (!isDefSpecSkillDir(target)) continue;
+    rmSync(target, { recursive: true, force: true });
+    removed++;
+  }
+
+  try {
+    if (readdirSync(parentDir).length === 0 && parentDir.endsWith(`${CODEX_PLUGIN_NAME}`)) {
+      rmSync(parentDir, { recursive: true, force: true });
+    }
+  } catch {}
+
+  console.log(`  ✅ Removed ${removed} legacy DefSpec skill entr${removed === 1 ? 'y' : 'ies'} from ${label}`);
+  return removed;
+}
+
+function cleanupLegacyDefSpecSkills() {
+  cleanupDefSpecSkillDirs(CODEX_SKILLS_DIR, 'global skills');
+  cleanupDefSpecSkillDirs(resolve(CODEX_PLUGIN_DIR, 'skills'), 'plugin skills');
+  cleanupDefSpecSkillDirs(resolve(PROJECT_DIR, '.codex', 'skills'), 'project skills');
 }
 
 function isHomeDir(path) {
@@ -101,8 +131,9 @@ function showHelp() {
 defspec-codex v${PKG.version}
 
 Usage:
-  npx defspec-codex                 Install Codex plugin/skills and initialize this project
-  npx defspec-codex --skills-only   Install/update global Codex integration only
+  npx defspec-codex                 Install Codex /defspec commands and initialize this project
+  npx defspec-codex --skills-only   Install/update global Codex command integration only
+  npx defspec-codex --integration-only
   npx defspec-codex --init-only     Initialize current project only
   npx defspec-codex --check         Check current installation
   npx defspec-codex --uninstall     Remove current project DefSpec files
@@ -141,13 +172,6 @@ function removeSentinelSection(content) {
   };
 }
 
-function installSkills() {
-  if (!existsSync(SKILLS_SRC)) throw new Error(`Missing skills source: ${SKILLS_SRC}`);
-  mkdirSync(CODEX_SKILLS_DIR, { recursive: true });
-  copyDirSync(SKILLS_SRC, CODEX_SKILLS_DIR);
-  console.log(`  ✅ Codex skills: ${countSkillDirs(CODEX_SKILLS_DIR)} installed -> ${CODEX_SKILLS_DIR}`);
-}
-
 function readJsonFile(path, fallback) {
   if (!existsSync(path)) return fallback;
   return JSON.parse(readFileSync(path, 'utf8'));
@@ -166,7 +190,6 @@ function installPluginBundle() {
   mkdirSync(CODEX_PLUGIN_DIR, { recursive: true });
   copyDirSync(PLUGIN_MANIFEST_SRC, resolve(CODEX_PLUGIN_DIR, '.codex-plugin'));
   copyDirSync(COMMANDS_SRC, resolve(CODEX_PLUGIN_DIR, 'commands'));
-  copyDirSync(SKILLS_SRC, resolve(CODEX_PLUGIN_DIR, 'skills'));
   if (existsSync(ASSETS_SRC)) copyDirSync(ASSETS_SRC, resolve(CODEX_PLUGIN_DIR, 'assets'));
   console.log(`  ✅ Codex plugin commands: ${sourceCommandNames().length} installed -> ${CODEX_PLUGIN_DIR}`);
 }
@@ -271,7 +294,7 @@ function installCodexConfig() {
 }
 
 function installCodexIntegration() {
-  installSkills();
+  cleanupLegacyDefSpecSkills();
   installPluginBundle();
   installMarketplace();
   installCodexConfig();
@@ -383,25 +406,32 @@ ${buildProjectGuidePrompt()}
 }
 
 function checkInstall() {
-  const names = sourceSkillNames();
   const commands = sourceCommandNames();
   console.log(`\ndefspec-codex v${PKG.version} check\n`);
   console.log(`  Project: ${PROJECT_DIR}`);
-  console.log(`  Global skill dir: ${CODEX_SKILLS_DIR}`);
+  console.log(`  Canonical entry: /defspec:* commands`);
   console.log(`  Codex plugin dir: ${CODEX_PLUGIN_DIR}`);
-  for (const name of names) {
-    const ok = existsSync(resolve(CODEX_SKILLS_DIR, name, 'SKILL.md'));
-    console.log(`  ${ok ? '✅' : '❌'} skill ${name}`);
-  }
   for (const name of commands) {
     const ok = existsSync(resolve(CODEX_PLUGIN_DIR, 'commands', `${name}.md`));
     console.log(`  ${ok ? '✅' : '❌'} command /defspec:${name}`);
   }
   const hasManifest = existsSync(resolve(CODEX_PLUGIN_DIR, '.codex-plugin', 'plugin.json'));
   console.log(`  ${hasManifest ? '✅' : '❌'} plugin manifest`);
+  const manifestContent = hasManifest ? readFileSync(resolve(CODEX_PLUGIN_DIR, '.codex-plugin', 'plugin.json'), 'utf8') : '';
+  const manifestExposesSkills = /"skills"\s*:/.test(manifestContent);
+  console.log(`  ${!manifestExposesSkills ? '✅' : '❌'} plugin manifest does not expose skills`);
+  const legacyGlobalSkills = countDefSpecSkillDirs(CODEX_SKILLS_DIR);
+  const legacyPluginSkills = countDefSpecSkillDirs(resolve(CODEX_PLUGIN_DIR, 'skills'));
+  const legacyProjectSkills = countDefSpecSkillDirs(resolve(PROJECT_DIR, '.codex', 'skills'));
+  console.log(`  ${legacyGlobalSkills === 0 ? '✅' : '❌'} no legacy global DefSpec skills`);
+  console.log(`  ${legacyPluginSkills === 0 ? '✅' : '❌'} no legacy plugin DefSpec skills`);
+  console.log(`  ${legacyProjectSkills === 0 ? '✅' : '❌'} no legacy project DefSpec skills`);
   const hasMarketplace = existsSync(CODEX_MARKETPLACE_PATH) && readFileSync(CODEX_MARKETPLACE_PATH, 'utf8').includes('"name": "defspec"');
   console.log(`  ${hasMarketplace ? '✅' : '❌'} marketplace entry`);
-  const hasConfig = existsSync(CODEX_CONFIG_PATH) && readFileSync(CODEX_CONFIG_PATH, 'utf8').includes(`[plugins."${CODEX_PLUGIN_NAME}@${CODEX_MARKETPLACE_NAME}"]`);
+  const configContent = existsSync(CODEX_CONFIG_PATH) ? readFileSync(CODEX_CONFIG_PATH, 'utf8') : '';
+  const pluginConfigMatches = configContent.match(new RegExp(`\\[plugins\\."${escapeRegExp(CODEX_PLUGIN_NAME)}@${escapeRegExp(CODEX_MARKETPLACE_NAME)}"\\]`, 'g')) ?? [];
+  const marketplaceConfigMatches = configContent.match(new RegExp(`\\[marketplaces\\.${escapeRegExp(CODEX_MARKETPLACE_NAME)}\\]`, 'g')) ?? [];
+  const hasConfig = pluginConfigMatches.length === 1 && marketplaceConfigMatches.length === 1;
   console.log(`  ${hasConfig ? '✅' : '❌'} Codex plugin enabled`);
   console.log(`  ${existsSync(resolve(PROJECT_DIR, 'docs', 'defspec', 'DEFSPEC.md')) ? '✅' : '❌'} docs/defspec`);
   const agentsPath = resolve(PROJECT_DIR, 'AGENTS.md');
@@ -410,22 +440,7 @@ function checkInstall() {
 }
 
 function uninstallSkills() {
-  if (!existsSync(CODEX_SKILLS_DIR)) {
-    console.log(`  ℹ️  No global DefSpec skills found at ${CODEX_SKILLS_DIR}`);
-    return;
-  }
-  let removed = 0;
-  const names = new Set(sourceSkillNames());
-  for (const entry of readdirSync(CODEX_SKILLS_DIR, { withFileTypes: true })) {
-    if (entry.isDirectory() && names.has(entry.name)) {
-      rmSync(resolve(CODEX_SKILLS_DIR, entry.name), { recursive: true, force: true });
-      removed++;
-    }
-  }
-  try {
-    if (readdirSync(CODEX_SKILLS_DIR).length === 0) rmSync(CODEX_SKILLS_DIR, { recursive: true, force: true });
-  } catch {}
-  console.log(`  ✅ Removed ${removed} global DefSpec skills`);
+  cleanupLegacyDefSpecSkills();
 }
 
 function removeTomlBlock(content, header) {
@@ -487,7 +502,7 @@ const help = has('--help') || has('-h');
 const version = has('--version') || has('-v');
 const check = has('--check');
 const uninstall = has('--uninstall') || has('-u');
-const skillsOnly = has('--skills-only');
+const skillsOnly = has('--skills-only') || has('--integration-only');
 const initOnly = has('--init-only');
 const force = has('--force') || has('-f');
 const yes = has('--yes') || has('-y');
