@@ -1,41 +1,196 @@
 ---
-description: Archive a completed SpecPilot requirement with implementation and validation notes.
+description: Archive a completed SpecPilot requirement and update indexes and records.
 argument-hint: REQ-xxx
 ---
 
-# SpecPilot Archive
+# SpecPilot: 存档需求
 
-The user invoked this command with: $ARGUMENTS
+存档已完成的需求，更新索引文件。
 
-Use this command when a requirement is accepted as complete.
+**参数**
+- `$ARGUMENTS` - 要存档的需求编号（如 REQ-001）
 
-## Preflight
+**规则约束**
+- 只存档已完成开发的需求
+- 必须更新 index.md 状态
+- 如果是迭代需求，需要处理旧需求状态
+- 保持实现最小化、聚焦
+- **保留 draft 文件作为完整技术方案参考**
 
-1. Read the target requirement, index, implementation notes, and test evidence.
-2. Inspect current git status for unfinished work.
-3. If validation is missing, report the gap before archiving.
+**执行步骤**
 
-## Plan
+## 步骤一：确定需求编号
 
-1. Confirm the requirement is complete.
-2. Add final implementation notes and validation evidence.
-3. Update the requirement status and index.
+1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+2. 如果未提供编号：
+   - 运行 `ls docs/specpilot/requirements/` 查看文件
+   - 读取 `docs/specpilot/requirements/index.md` 找到 `in_progress` 状态的需求
+   - 询问用户要存档哪个需求
+3. 如果无法确定编号，停止并告知用户
 
-## Commands
+## 步骤二：验证需求
 
-1. Mark the requirement as completed or archived according to project convention.
-2. Preserve the requirement history.
-3. Record any residual risks or follow-up requirements.
+1. 检查草稿文件是否存在：`docs/specpilot/requirements/REQ-{编号}-draft.md`
+2. 如果不存在草稿（快速模式），直接创建存档文件
 
-## Verification
+## 步骤三：生成存档文件
 
-1. Re-read the requirement and index.
-2. Confirm the archive status is consistent.
+1. 从需求内容提取描述关键词（英文小写+连字符格式）
+2. 创建存档文件：`docs/specpilot/requirements/REQ-{编号}-{描述}.md`
+3. 按照 `REQ-000-template.md` 模板补全存档内容（**精简版，便于快速查阅**）：
 
-## Summary
+```markdown
+# REQ-{编号}-{描述}
 
-Report the archived requirement id, validation evidence, and any follow-up items.
+> {需求简短描述}
 
-## Next Steps
+---
 
-Suggest starting a new requirement with `/specpilot:new` only if there is follow-up scope.
+## 基本信息
+
+| 字段 | 值 |
+|------|-----|
+| **编号** | REQ-{编号} |
+| **状态** | completed |
+| **创建时间** | {创建时间} |
+| **完成时间** | {当前时间} |
+| **关联需求** | {关联信息或"无"} |
+| **业务模块** | {所属模块} |
+
+---
+
+## 需求描述
+
+### 原始需求
+
+```
+[精简的原始需求摘要]
+```
+
+### 需求确认
+
+#### 术语定义
+[关键术语]
+
+#### 业务规则
+[核心业务规则]
+
+#### 边界条件
+[关键边界条件]
+
+### 需求理解
+
+- **核心目标**：
+- **主要改动**：
+- **影响范围**：
+
+---
+
+## 技术方案
+
+### 改动范围
+
+| 文件 | 改动类型 | 说明 |
+|------|----------|------|
+| {文件路径} | 新增/修改 | {说明} |
+
+### 实现思路
+
+[核心实现逻辑]
+
+### 数据流
+
+[关键数据流说明]
+
+---
+
+## 关键代码
+
+[关键代码片段]
+
+---
+
+## 业务规则
+
+| 规则编号 | 规则描述 |
+|----------|----------|
+| R1 | |
+
+---
+
+## 上下文信息
+
+### 相关代码位置
+
+| 功能 | 文件 | 方法/结构体 |
+|------|------|-------------|
+| | | |
+
+---
+
+## 备注
+
+- **踩坑点**：[实施过程中发现的问题]
+- **注意事项**：[需要注意的点]
+
+---
+
+## 变更历史
+
+| 时间 | 变更内容 |
+|------|----------|
+| {创建时间} | 需求创建 |
+| {完成时间} | 需求完成 |
+```
+
+## 步骤四：更新 draft 文件
+
+**不删除 draft 文件**，而是更新其状态：
+
+1. 将 draft 文件头部状态改为：`> 状态：✅ 已完成（保留作为技术方案参考）`
+2. 确保 draft 文件包含完整的：
+   - 【原始需求】
+   - 【需求确认】（完整版）
+   - 【技术方案审查记录】（如有，记录发现的问题和修正过程）
+   - 【实施提交记录】（git commit 记录）
+   - 【经验总结】（踩坑点和教训）
+
+## 步骤五：更新索引文件
+
+更新 `docs/specpilot/requirements/index.md`：
+
+1. **更新需求总览表格**：
+   - 状态改为 `✅ completed`
+   - 填写描述
+   - 填写完成时间
+   - 填写业务模块
+
+2. **更新需求关联**（如有关联需求）：
+   - 添加关联记录，如：`REQ-{编号} 迭代自 REQ-xxx`
+
+3. **处理迭代需求**（如果是迭代自某需求）：
+   - 将被迭代的需求状态改为 `🔄 iterated`
+
+## 步骤六：保留附加文件
+
+以下文件都**保留**（作为存档的一部分）：
+1. `REQ-{编号}-draft.md` - 完整技术方案和审查记录
+2. `REQ-{编号}-tasks.md` - 任务分解清单（如有）
+3. `REQ-{编号}-design.md` - 技术设计文档（如有）
+
+## 步骤七：输出总结
+
+```
+需求 REQ-{编号} 已存档。
+
+文件说明：
+- 存档文件（精简版）：docs/specpilot/requirements/REQ-{编号}-{描述}.md
+- 完整方案（保留）：docs/specpilot/requirements/REQ-{编号}-draft.md
+- 索引已更新：docs/specpilot/requirements/index.md
+
+{如有关联需求的处理说明}
+```
+
+**参考文档**
+- 存档模板见 `docs/specpilot/requirements/REQ-000-template.md`
+- 完整规范见 `docs/specpilot/README.md`

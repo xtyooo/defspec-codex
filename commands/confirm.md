@@ -1,44 +1,194 @@
 ---
-description: Confirm a SpecPilot draft by clarifying scope, rules, boundaries, and tests.
+description: Analyze and confirm a SpecPilot requirement with scope, rules, boundaries, and data-flow questions.
 argument-hint: REQ-xxx
 ---
 
-# SpecPilot Confirm
+# SpecPilot: 需求确认
 
-The user invoked this command with: $ARGUMENTS
+分析用户填写的原始需求，识别模糊点和边界条件，提出疑问等待用户确认，确认后整理最终需求文档。
 
-Use this command to turn a draft requirement into a confirmed requirement.
+**参数**
+- `$ARGUMENTS` - 要确认的需求编号（如 REQ-001）
 
-## Preflight
+**规则约束**
+- 必须先读取项目指南：`docs/specpilot/project-guide.md`
+- 必须先读取需求草稿再开始分析
+- 原始需求内容必须保留，不可删除或修改
+- 提出的问题要全面、具体、有针对性
+- **必须进行完整数据链路分析**，追踪数据从输入到最终处理的完整流程
+- 确认完成后才更新需求文档
 
-1. Read the required SpecPilot context files.
-2. Read the target `REQ-xxx` draft and requirement index.
-3. Inspect relevant code paths enough to understand feasibility and integration boundaries.
+**执行步骤**
 
-## Plan
+## 阶段一：准备
 
-1. Identify unclear scope, business rules, edge cases, and test obligations.
-2. Ask concise clarification questions only when needed.
-3. Update the requirement with confirmed details after the user answers.
-4. Do not implement code in this command.
+1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+2. 如果未提供编号，运行 `ls docs/specpilot/requirements/` 并询问用户要确认哪个需求
+3. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`
+4. 读取项目指南：`docs/specpilot/project-guide.md`
+5. 更新 `docs/specpilot/requirements/index.md`：将状态改为 `🔍 confirming`
 
-## Commands
+## 阶段二：需求分析（深度分析）
 
-1. Normalize terminology and requirement boundaries.
-2. Record acceptance criteria and non-goals.
-3. Record impacted modules, data flows, compatibility constraints, and test cases.
-4. Mark the requirement status as `confirmed` when enough detail is available.
+深入分析需求内容，**必须**识别以下问题：
 
-## Verification
+### 2.1 基础分析
 
-1. Re-read the confirmed requirement.
-2. Confirm ambiguity has been reduced enough for design.
-3. Confirm the index reflects the new status.
+1. **术语定义**：是否有需要明确定义的术语或概念？
+2. **边界条件**：是否有未说明的边界情况？
+3. **业务规则**：是否有隐含的业务规则需要明确？
+4. **数据定义**：涉及的数据字段、格式、来源是否清晰？
+5. **状态流转**：如有状态变化，流转规则是否完整？
+6. **异常处理**：异常情况如何处理？
+7. **关联影响**：是否影响其他功能或模块？
+8. **前置条件**：是否有前置依赖或假设？
 
-## Summary
+### 2.2 完整数据链路分析（重要）
 
-Report what was confirmed, what remains risky, and the target requirement file.
+**必须分析完整的数据/调用链路**：
 
-## Next Steps
+1. **数据流向**：数据从哪里来？经过哪些处理？最终到哪里？
+2. **调用链路**：涉及哪些方法/服务？调用顺序是什么？
+3. **时序依赖**：是否有异步处理？存储和使用的时序是否正确？
+4. **数据合并**：更新数据时是否会覆盖其他字段？
+5. **MQ/异步**：如果涉及消息队列，消费端能否获取到所需数据？
 
-Suggest `/specpilot:exec REQ-xxx` to design and implement after confirmation.
+### 2.3 技术可行性分析
+
+1. **现有代码**：读取相关代码文件，分析现有实现
+2. **接口格式**：如涉及外部接口，确认数据格式是否符合规范
+3. **字段命名**：确认字段名称是否与官方文档/规范一致
+
+## 阶段三：提出疑问
+
+1. 将分析出的所有疑问整理成清晰的问题列表
+2. **按重要程度排序**，严重问题优先
+3. 输出格式：
+
+```markdown
+## 需求分析
+
+我已阅读需求内容并进行了完整数据链路分析，有以下问题需要确认：
+
+### 关键问题（必须确认）
+
+1. **[问题类别]**：[具体问题描述]？
+   - 背景：[为什么这是个问题]
+   - 建议：[如果有建议方案]
+
+### 一般问题
+
+2. **[问题类别]**：[具体问题描述]？
+...
+
+### 技术确认点
+
+- [需要用户确认的技术细节]
+...
+
+请逐一回答上述问题，我会在确认后整理最终需求。
+```
+
+3. 等待用户逐一回答问题
+4. 如有新的疑问，继续追问直到所有细节明确
+5. **对于复杂需求，可能需要多轮确认**
+
+## 阶段四：整理最终需求
+
+用户确认完所有问题后：
+
+1. 将原始需求和确认结果整理成结构化的最终需求
+2. 更新草稿文件 `REQ-{编号}-draft.md`，结构如下：
+
+```markdown
+# REQ-{编号}-[描述]
+
+> 状态：✅📋 已确认
+
+---
+
+## 【原始需求】
+
+<!-- 原封不动保留用户最初填写的需求内容，仅作依据 -->
+{用户原始填写的需求内容}
+
+---
+
+## 【需求确认】
+
+<!-- AI分析确认后生成的结构化需求，实际设计和实施以此为准 -->
+
+### 术语定义
+
+| 术语 | 定义 |
+|-----|------|
+| xxx | xxx |
+
+### 数据模型设计
+
+[涉及的数据结构、字段定义]
+
+### 业务规则
+
+| 条件 | 处理 |
+|-----|------|
+| xxx | xxx |
+
+### 数据流/调用链路
+
+[完整的数据流向或调用链路说明]
+
+### 边界条件
+
+- [边界情况1]：[处理方式]
+- [边界情况2]：[处理方式]
+
+### 涉及代码文件
+
+| 文件 | 修改内容 |
+|-----|---------|
+| xxx | xxx |
+
+### 补充说明
+
+[其他需要说明的内容]
+
+---
+
+## 【执行模式】
+
+{保留原有选择}
+
+---
+
+## 【关联需求】
+
+{保留原有内容}
+
+---
+
+## 【代码位置说明】
+
+{保留原有内容}
+```
+
+3. 更新 `docs/specpilot/requirements/index.md`：将状态改为 `✅📋 confirmed`
+
+## 阶段五：完成
+
+输出总结：
+
+```
+需求 REQ-{编号} 已确认完成。
+
+需求文档已更新：docs/specpilot/requirements/REQ-{编号}-draft.md
+- 【原始需求】：保留用户原始描述（仅作依据）
+- 【需求确认】：整理后的结构化需求（设计和实施以此为准）
+
+下一步：
+执行开发：/specpilot:exec REQ-{编号}
+```
+
+**参考文档**
+- 完整规范见 `docs/specpilot/README.md`
+- 执行开发见 `/specpilot:exec`

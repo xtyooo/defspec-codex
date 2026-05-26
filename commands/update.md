@@ -1,42 +1,216 @@
 ---
-description: Record and handle a change to an existing SpecPilot requirement.
+description: Handle a change to an existing SpecPilot requirement.
 argument-hint: REQ-xxx change summary
 ---
 
-# SpecPilot Update
+# SpecPilot: 更新需求
 
-The user invoked this command with: $ARGUMENTS
+处理需求变更，根据需求当前状态和变更范围选择合适的处理方式。
 
-Use this command when an existing requirement changes after drafting, confirmation, or implementation.
+**参数**
+- `$ARGUMENTS` - 格式：`REQ-xxx [变更内容]` 或仅 `REQ-xxx`（变更内容在文档中）
 
-## Preflight
+**使用场景**
+- 开发中的需求有调整
+- 已完成的需求需要修复 bug
+- 已完成的需求需要新增功能
+- 需求理解有偏差需要修正
 
-1. Read the target requirement and related design or implementation records.
-2. Inspect code and tests affected by the requested change.
-3. Identify whether the change alters scope, behavior, data, integrations, or compatibility.
+**变更内容来源**（二选一）
+1. 命令参数直接提供：`/specpilot:update REQ-001 新增xxx功能，修改xxx逻辑`
+2. 在 draft 文件的【变更请求】章节中写明（AI 自动读取）
 
-## Plan
+**执行步骤**
 
-1. Record the change in the requirement history.
-2. Update acceptance criteria, design notes, and tasks as needed.
-3. Decide whether implementation should proceed now or wait for confirmation.
+## 阶段一：读取需求和变更内容
 
-## Commands
+1. 从 `$ARGUMENTS` 解析需求编号和变更内容
+2. 读取 `docs/specpilot/requirements/index.md` 获取需求当前状态
+3. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`
+4. 读取项目指南：`docs/specpilot/project-guide.md`
+5. **获取变更内容**：
+   - 如果命令参数中包含变更内容，使用参数中的内容
+   - 否则检查 draft 文件是否有【变更请求】章节
+   - 如果都没有，提示用户提供变更内容
 
-1. Preserve the previous requirement history.
-2. Make the new behavior explicit.
-3. Update status to match the new state.
-4. Implement only if the user has requested implementation or the project mode allows direct execution.
+## 阶段二：分析变更影响
 
-## Verification
+1. **深入分析变更内容**：
+   - 变更涉及哪些功能点
+   - 变更影响哪些代码文件
+   - 变更是否改变核心逻辑
+   - 变更与原需求的关系
 
-1. Re-read the updated records.
-2. Confirm downstream design, tests, and index status still agree.
+2. **判断变更类型**：
 
-## Summary
+| 变更类型 | 判断标准 | 处理方式 |
+|----------|----------|----------|
+| Bug 修复 | 代码实现与需求不符，或有逻辑错误 | 原需求追加修复 |
+| 需求微调 | 改动 ≤3 个文件，不改变核心逻辑 | 原需求追加修改 |
+| 需求新增 | 在原有基础上新增独立功能点 | 建议创建新需求 |
+| 需求重做 | 改变核心逻辑，改动 >5 个文件 | 必须创建新需求 |
 
-Report what changed, what files were updated, and whether implementation is pending or complete.
+3. **输出分析结果**：
 
-## Next Steps
+```markdown
+## 变更分析 - REQ-{编号}
 
-Suggest `/specpilot:check REQ-xxx` after the update.
+**当前状态**：{状态}
+**变更内容**：{用户提供的变更描述}
+
+### 变更影响分析
+
+**变更类型**：{Bug修复/需求微调/需求新增/需求重做}
+
+**影响范围**：
+- 涉及文件：{文件列表}
+- 核心逻辑变化：{是/否}
+- 预估改动量：{小/中/大}
+
+**处理建议**：{原需求修改 / 创建新需求迭代}
+
+是否同意此处理方式？
+```
+
+## 阶段三：更新需求文档
+
+### 情况A：原需求修改（Bug修复/微调）
+
+1. **更新 index.md 状态**：
+   - 如果是 `completed`，改为 `🔧 updating`
+   - 如果是 `in_progress`，保持不变
+
+2. **在 draft 文件中记录变更**：
+
+在【需求确认】章节后添加或更新【变更记录】：
+
+```markdown
+---
+
+## 【变更记录】
+
+### 变更 #1 - {日期}
+
+**变更类型**：{Bug修复/需求微调}
+
+**变更原因**：
+{为什么需要变更}
+
+**变更内容**：
+{具体变更了什么}
+
+**影响范围**：
+- 涉及文件：{文件列表}
+- 涉及功能：{功能点}
+
+**变更后的需求**：
+{更新后的需求描述，整合到原需求中}
+```
+
+3. **更新【需求确认】章节**：
+   - 整合变更内容到原有需求确认中
+   - 更新数据模型、业务规则、数据流等（如有变化）
+   - 更新涉及代码文件列表
+
+4. **进入确认流程**：
+   - 如果变更较复杂，重新进行需求确认（类似 /specpilot:confirm）
+   - 如果变更简单明确，直接进入执行
+
+---
+
+### 情况B：创建新需求迭代（新增/重做）
+
+1. **询问用户确认**：
+
+```markdown
+该变更涉及较大改动，建议创建新需求进行迭代。
+
+- 原需求：REQ-{编号} - {描述}
+- 新需求：REQ-{新编号}（迭代自 REQ-{编号}）
+
+是否同意？输入"同意"继续，或"坚持原需求"在原需求上修改。
+```
+
+2. **如果同意创建新需求**：
+   - 自动执行类似 `/specpilot:new` 的流程
+   - 新需求自动填充：
+     - 关联需求：`迭代自：REQ-{原编号}`
+     - 代码位置说明：复制原需求
+     - 需求内容：包含原需求摘要 + 新变更内容
+   - 更新 index.md 关联关系
+   - 原需求状态可选改为 `🔄 iterated`（如果完全替代）
+
+3. **如果用户坚持在原需求修改**：
+   - 按情况A处理
+   - 在变更记录中标注"重大变更（用户选择不迭代）"
+
+---
+
+## 阶段四：后续流程
+
+根据变更复杂度决定后续流程：
+
+**简单变更（Bug修复/小微调）**：
+```
+变更分析 → 更新文档 → 直接进入执行（/specpilot:exec 的实施阶段）
+```
+
+**复杂变更（涉及多处改动）**：
+```
+变更分析 → 更新文档 → 重新确认（/specpilot:confirm 流程） → 执行
+```
+
+**创建新需求**：
+```
+变更分析 → 创建新需求 → 完整流程（confirm → exec → archive）
+```
+
+---
+
+## 阶段五：输出总结
+
+```markdown
+## 需求变更处理完成
+
+**需求**：REQ-{编号} - {描述}
+**变更类型**：{类型}
+**处理方式**：{原需求修改 / 创建新需求 REQ-{新编号}}
+
+### 变更摘要
+- {变更内容摘要}
+
+### 文档更新
+- [x] 变更记录已添加到 draft 文件
+- [x] 需求确认已更新（如适用）
+- [x] index.md 状态已更新
+
+### 下一步
+- {提示下一步操作}
+```
+
+---
+
+## 【变更请求】章节模板
+
+用户可在 draft 文件中添加此章节来描述变更：
+
+```markdown
+---
+
+## 【变更请求】
+
+<!-- 用户填写变更内容，AI 执行 /specpilot:update 时会读取 -->
+
+**变更原因**：
+[为什么需要变更]
+
+**变更内容**：
+[具体要变更什么]
+
+**期望效果**：
+[变更后期望达到的效果]
+```
+
+**参考文档**
+- 完整规范见 `docs/specpilot/README.md`
+- 现有能力规格见 `docs/specpilot/specs/`

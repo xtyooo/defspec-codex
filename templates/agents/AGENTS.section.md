@@ -5,7 +5,7 @@ This project uses SpecPilot for non-trivial feature work and behavior changes.
 
 Before starting requirement-driven work, read:
 
-1. `docs/specpilot/SPECPILOT.md`
+1. `docs/specpilot/specpilot.md`
 2. `docs/specpilot/project.md`
 3. `docs/specpilot/project-guide.md`
 4. `docs/specpilot/requirements/index.md`

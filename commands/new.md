@@ -1,45 +1,124 @@
 ---
-description: Create the next SpecPilot requirement draft and update the requirement index.
+description: Create a new SpecPilot requirement draft with the next requirement id.
 argument-hint: [requirement summary]
 ---
 
-# SpecPilot New
+# SpecPilot: 新建需求
 
-The user invoked this command with: $ARGUMENTS
+按照 SpecPilot 规范创建新的需求草稿。
 
-Use this command to start a new requirement before implementation.
+**规则约束**
+- 首先读取 `docs/specpilot/project-guide.md` 了解项目规范
+- 检查 `docs/specpilot/requirements/index.md` 获取下一个需求编号
+- 此阶段不编写任何代码，只创建需求文档
+- 如果需求描述模糊，先提问澄清
 
-## Preflight
+**执行步骤**
 
-1. Read `docs/specpilot/SPECPILOT.md`, `docs/specpilot/project.md`, and `docs/specpilot/project-guide.md` if they exist.
-2. Read `docs/specpilot/requirements/index.md` if it exists.
-3. Inspect the current repo enough to understand the requested capability.
-4. If SpecPilot docs are missing, explain that the project should run `npx github:xtyooo/specpilot-codex` first.
+1. 读取 `docs/specpilot/requirements/index.md`，找到当前最大需求编号
+2. 计算下一个编号（如最大是 REQ-003，则下一个是 REQ-004）
+3. 创建草稿文件 `docs/specpilot/requirements/REQ-{编号}-draft.md`，内容如下：
 
-## Plan
+```markdown
+# REQ-{编号}-[待填写描述]
 
-1. Choose the next `REQ-xxx` id from the index or existing requirement files.
-2. Create a draft requirement record under `docs/specpilot/requirements/`.
-3. Update `docs/specpilot/requirements/index.md`.
-4. Do not implement code in this command.
+> 状态：📝 草稿
 
-## Commands
+---
 
-1. Capture the user request, scope, motivation, assumptions, and open questions.
-2. Record success criteria, likely impacted areas, and test ideas.
-3. Mark the requirement status as `draft`.
-4. Keep the draft concise and easy to confirm in the next step.
+## 【执行模式】
 
-## Verification
+<!-- 请选择一个，删除另一个。不填默认"先出方案" -->
+- 先出方案
+- 直接实施
 
-1. Re-read the created draft and index entry.
-2. Confirm the requirement id is unique.
-3. Confirm no code files were changed unless the user explicitly requested otherwise.
+---
 
-## Summary
+## 【关联需求】
 
-Report the created requirement id, file path, status, and recommended next command.
+<!-- 如无关联可删除此章节 -->
+- 迭代自：REQ-xxx
+- 参考：REQ-xxx
 
-## Next Steps
+---
 
-Suggest `/specpilot:confirm REQ-xxx` when the draft is ready to clarify.
+## 【代码位置说明】
+
+<!-- 如无可删除此章节 -->
+
+---
+
+## 【需求内容】
+
+<!-- 请填写具体需求描述 -->
+
+---
+
+## 【业务规则】
+
+<!-- 如无可删除此章节 -->
+
+---
+
+## 【上下文信息】
+
+<!-- 可选，不填则AI自行分析代码 -->
+
+---
+
+<!-- 以下章节由 AI 在执行过程中填写 -->
+
+## 【需求确认】
+
+<!-- /specpilot:confirm 执行后填写 -->
+
+---
+
+## 【技术方案】
+
+<!-- /specpilot:exec 方案确认后填写 -->
+
+---
+
+## 【技术方案审查记录】
+
+<!-- 代码审查过程中发现的问题和修正记录 -->
+
+---
+
+## 【实施提交记录】
+
+<!-- git commit 记录 -->
+
+---
+
+## 【经验总结】
+
+<!-- 踩坑点和技术要点 -->
+```
+
+4. 更新 `docs/specpilot/requirements/index.md`：
+   - 在 REQ-000 行上方添加新行（7列，与表头一致）：
+   ```
+   | REQ-{编号} | [待填写] | 📝 draft | {当前日期} | - | - | - |
+   ```
+   - 列说明：编号 | 描述 | 状态 | 创建时间 | 完成时间 | 关联需求 | 业务模块
+
+5. 如果需求较复杂，同时创建：
+   - `docs/specpilot/requirements/REQ-{编号}-tasks.md` 任务分解
+   - `docs/specpilot/requirements/REQ-{编号}-design.md` 技术决策（涉及架构/跨模块时）
+
+6. 输出总结：
+```
+已创建需求草稿：docs/specpilot/requirements/REQ-{编号}-draft.md
+已更新索引：docs/specpilot/requirements/index.md
+
+下一步：
+1. 编辑草稿文件填写需求详情
+2. 需求确认：/specpilot:confirm REQ-{编号}
+3. 执行开发：/specpilot:exec REQ-{编号}
+```
+
+**参考文档**
+- 完整规范见 `docs/specpilot/README.md`
+- 提交指南见 `docs/specpilot/requirements/GUIDE-submit-req.md`

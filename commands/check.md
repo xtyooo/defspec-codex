@@ -1,43 +1,236 @@
 ---
-description: Review a SpecPilot requirement against design, implementation, tests, and risks.
+description: Deep-check a SpecPilot requirement according to its current status.
 argument-hint: REQ-xxx
 ---
 
-# SpecPilot Check
+# SpecPilot: 检查需求
 
-The user invoked this command with: $ARGUMENTS
+手动检查当前需求的最新进度，根据不同阶段进行针对性的深度复核。
 
-Use this high-frequency command to audit whether a requirement and implementation are aligned.
+**参数**
+- `$ARGUMENTS` - 要检查的需求编号（如 REQ-001）
 
-## Preflight
+**使用场景**
+- 中断后恢复工作，需要了解当前进度
+- 对当前阶段的工作进行复核确认
+- 主动触发代码审查
+- 确认需求是否可以进入下一阶段
 
-1. Read the required SpecPilot context files.
-2. Read the target requirement, design, task, and index records.
-3. Inspect relevant code, tests, and current git status.
+**执行步骤**
 
-## Plan
+## 阶段一：读取需求状态
 
-1. Compare requirement intent, accepted scope, implementation state, tests, and documentation.
-2. Prioritize concrete findings over general summaries.
-3. Do not change files unless the user explicitly asks for fixes.
+1. 从 `$ARGUMENTS` 解析需求编号
+2. 如果未提供编号，运行 `ls docs/specpilot/requirements/` 并询问用户要检查哪个需求
+3. 读取 `docs/specpilot/requirements/index.md` 获取需求当前状态
+4. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`
+5. 读取项目指南：`docs/specpilot/project-guide.md`
 
-## Commands
+## 阶段二：根据状态执行检查
 
-1. Check for missing scope, extra scope, behavior regressions, weak edge-case handling, and stale records.
-2. Check whether tests match the requirement risk.
-3. Check whether `requirements/index.md`, requirement status, design notes, and implementation notes agree.
-4. Surface blockers, likely bugs, and missing validation first.
+### 如果状态是 `📝 draft`（草稿阶段）
 
-## Verification
+**检查内容**：需求是否完整可确认
 
-1. Cite local files and lines where useful.
-2. If no findings are found, say that explicitly and list residual risks or unrun tests.
-3. Avoid claiming success without evidence.
+1. 读取草稿中的【需求内容】
+2. 检查需求描述是否清晰完整
+3. 输出检查结果：
 
-## Summary
+```markdown
+## 需求检查结果 - REQ-{编号}
 
-Report findings first, then a short status assessment.
+**当前状态**：📝 草稿
 
-## Next Steps
+### 需求完整性检查
+- [ ] 需求描述是否清晰
+- [ ] 是否有明确的业务目标
+- [ ] 是否指定了代码位置（如有）
 
-Suggest `/specpilot:update REQ-xxx` for requirement changes, `/specpilot:exec REQ-xxx` for fixes, or `/specpilot:archive REQ-xxx` when complete.
+### 建议
+- [下一步建议，如执行 /specpilot:confirm]
+```
+
+---
+
+### 如果状态是 `🔍 confirming`（确认中）
+
+**检查内容**：需求确认是否完整
+
+1. 读取【需求内容】和【需求确认】（如有）
+2. 重新进行完整数据链路分析：
+   - 数据从哪里来？经过哪些处理？最终到哪里？
+   - 涉及哪些方法/服务？调用顺序是什么？
+   - 是否有异步处理？时序是否正确？
+3. 检查是否还有未确认的问题
+4. 输出检查结果：
+
+```markdown
+## 需求检查结果 - REQ-{编号}
+
+**当前状态**：🔍 确认中
+
+### 需求确认复核
+
+#### 完整数据链路分析
+[重新分析的数据流/调用链路]
+
+#### 已确认项
+- [x] [已确认的内容]
+
+#### 待确认项
+- [ ] [仍需确认的问题]
+
+### 建议
+- [是否可以完成确认，或需要补充什么]
+```
+
+---
+
+### 如果状态是 `✅📋 confirmed`（已确认）
+
+**检查内容**：确认内容是否完整，是否可以开始执行
+
+1. 读取完整的【需求确认】部分
+2. 检查确认内容的完整性：
+   - 术语定义
+   - 数据模型设计
+   - 业务规则
+   - 数据流/调用链路
+   - 边界条件
+   - 涉及代码文件
+3. 读取相关代码文件，验证确认内容的准确性
+4. 输出检查结果：
+
+```markdown
+## 需求检查结果 - REQ-{编号}
+
+**当前状态**：✅📋 已确认
+
+### 需求确认完整性检查
+- [x] 术语定义：已定义
+- [x] 数据模型设计：已设计
+- [x] 业务规则：已明确
+- [x] 数据流/调用链路：已分析
+- [x] 边界条件：已覆盖
+- [x] 涉及代码文件：已列出
+
+### 代码位置验证
+[验证确认中提到的代码文件和方法是否存在]
+
+### 建议
+- [是否可以执行 /specpilot:exec，或需要补充什么]
+```
+
+---
+
+### 如果状态是 `🚧 in_progress`（进行中）
+
+**检查内容**：开发进度和代码完整性（最重要的检查）
+
+1. 读取【需求确认】和【技术方案】（如有）
+2. 检查代码实现状态：
+   - 读取涉及的代码文件
+   - 对照需求确认，逐项检查是否已实现
+3. **执行完整数据链路代码审查**：
+   - 追踪数据从输入到输出的完整路径
+   - 检查每个改动点是否正确
+   - 检查是否有遗漏的改动点
+4. **执行两轮代码自审**（如果代码已完成）：
+   - 第一轮：完整性检查
+   - 第二轮：质量检查
+5. 输出检查结果：
+
+```markdown
+## 需求检查结果 - REQ-{编号}
+
+**当前状态**：🚧 进行中
+
+### 开发进度检查
+
+#### 需求覆盖情况
+| 需求项 | 状态 | 说明 |
+|--------|------|------|
+| [需求1] | ✅/❌/🚧 | [实现情况] |
+| [需求2] | ✅/❌/🚧 | [实现情况] |
+
+#### 代码改动清单
+| 文件 | 预期改动 | 实际状态 |
+|------|----------|----------|
+| xxx.go | xxx | ✅ 已完成 / ❌ 未实现 / 🚧 部分完成 |
+
+### 完整数据链路代码审查
+
+#### 数据流验证
+[追踪数据流，验证每个环节]
+
+#### 代码审查结果
+
+**第一轮：完整性检查**
+- [x] 需求覆盖：[结果]
+- [x] 数据流：[结果]
+- [x] 代码一致性：[结果]
+
+**第二轮：质量检查**
+- [x] 代码质量：[结果]
+- [x] 错误处理：[结果]
+- [x] 日志：[结果]
+
+#### 发现的问题
+1. [问题描述]：[建议修复方案]
+
+### 建议
+- [下一步操作：继续开发 / 修复问题 / 可以存档]
+```
+
+---
+
+### 如果状态是 `✅ completed`（已完成）
+
+**检查内容**：存档完整性检查
+
+1. 检查存档文件是否存在
+2. 检查 draft 文件是否保留
+3. 检查 index.md 是否已更新
+4. 输出检查结果：
+
+```markdown
+## 需求检查结果 - REQ-{编号}
+
+**当前状态**：✅ 已完成
+
+### 存档完整性检查
+- [x] 存档文件：docs/specpilot/requirements/REQ-{编号}-{描述}.md
+- [x] Draft 文件：已保留
+- [x] 索引更新：已更新
+
+### 文件清单
+- 存档文件：[路径]
+- Draft 文件：[路径]
+- 其他文件：[如有]
+```
+
+---
+
+## 阶段三：输出总结
+
+无论什么状态，最后都输出：
+
+```markdown
+---
+
+## 检查总结
+
+**需求**：REQ-{编号} - {描述}
+**当前状态**：{状态}
+**检查时间**：{当前时间}
+
+### 检查结论
+- [总体结论：正常 / 有问题需处理]
+
+### 下一步操作
+- [具体建议的下一步操作]
+```
+
+**参考文档**
+- 完整规范见 `docs/specpilot/README.md`
+- 现有能力规格见 `docs/specpilot/specs/`

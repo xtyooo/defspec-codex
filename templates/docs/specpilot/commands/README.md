@@ -12,4 +12,4 @@
 - `/specpilot:archive REQ-xxx`
 - `/specpilot:list`
 
-具体流程见 `docs/specpilot/SPECPILOT.md`、`project.md` 和 `project-guide.md`。
+具体流程见 `docs/specpilot/specpilot.md`、`project.md` 和 `project-guide.md`。

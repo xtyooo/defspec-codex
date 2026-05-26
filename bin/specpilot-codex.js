@@ -381,7 +381,7 @@ function buildProjectGuidePrompt() {
 
 请先阅读：
 
-1. docs/specpilot/SPECPILOT.md
+1. docs/specpilot/specpilot.md
 2. docs/specpilot/project.md
 3. docs/specpilot/project-guide.md
 4. AGENTS.md（如果存在）

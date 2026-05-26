@@ -1,42 +1,71 @@
 ---
-description: Cancel a SpecPilot requirement without deleting its history.
+description: Cancel a draft or in-progress SpecPilot requirement without losing history.
 argument-hint: REQ-xxx
 ---
 
-# SpecPilot Cancel
+# SpecPilot: 取消需求
 
-The user invoked this command with: $ARGUMENTS
+取消需求，更新状态并询问是否删除草稿文件。
 
-Use this command when a requirement should no longer be implemented.
+**参数**
+- `$ARGUMENTS` - 要取消的需求编号（如 REQ-001）
 
-## Preflight
+**规则约束**
+- 只能取消 draft 或 in_progress 状态的需求
+- 必须更新 index.md 状态
+- 删除文件前需要用户确认
 
-1. Read the target requirement and index.
-2. Check whether any implementation work already exists.
-3. Identify whether cleanup is needed.
+**执行步骤**
 
-## Plan
+## 步骤一：确定需求编号
 
-1. Record why the requirement is cancelled.
-2. Preserve the requirement history.
-3. Update the index and status.
-4. Do not delete records.
+1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+2. 如果未提供编号：
+   - 读取 `docs/specpilot/requirements/index.md`
+   - 列出 draft 和 in_progress 状态的需求
+   - 询问用户要取消哪个需求
+3. 如果无法确定编号，停止并告知用户
 
-## Commands
+## 步骤二：验证状态
 
-1. Mark the requirement as `cancelled`.
-2. Add cancellation notes and any replacement requirement link.
-3. If code cleanup is needed, ask before changing implementation files.
+1. 读取 `docs/specpilot/requirements/index.md`
+2. 检查需求状态是否为 draft 或 in_progress
+3. 如果状态为 completed 或其他，提示用户该需求不能取消
 
-## Verification
+## 步骤三：更新索引
 
-1. Re-read the requirement and index.
-2. Confirm the record remains discoverable.
+1. 更新 `docs/specpilot/requirements/index.md`：
+   - 将需求状态改为 `❌ cancelled`
 
-## Summary
+## 步骤四：处理相关文件
 
-Report the cancelled requirement id and any cleanup or replacement next steps.
+1. 检查以下文件是否存在：
+   - `docs/specpilot/requirements/REQ-{编号}-draft.md`
+   - `docs/specpilot/requirements/REQ-{编号}-tasks.md`
+   - `docs/specpilot/requirements/REQ-{编号}-design.md`
 
-## Next Steps
+2. 询问用户：
+```
+需求 REQ-{编号} 已标记为取消。
 
-Suggest `/specpilot:new` if the cancelled work should be replaced by a new requirement.
+发现以下相关文件：
+- REQ-{编号}-draft.md
+- REQ-{编号}-tasks.md（如果存在）
+- REQ-{编号}-design.md（如果存在）
+
+是否删除这些文件？（是/否）
+```
+
+3. 根据用户回复处理文件
+
+## 步骤五：输出总结
+
+```
+需求 REQ-{编号} 已取消。
+
+索引已更新：docs/specpilot/requirements/index.md
+{文件处理结果}
+```
+
+**参考文档**
+- 完整规范见 `docs/specpilot/README.md`

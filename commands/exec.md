@@ -1,45 +1,170 @@
 ---
-description: Design and execute a confirmed SpecPilot requirement with approval gates.
+description: Design and execute a SpecPilot requirement with approval gates and code review.
 argument-hint: REQ-xxx
 ---
 
-# SpecPilot Exec
+# SpecPilot: 执行需求
 
-The user invoked this command with: $ARGUMENTS
+按照 SpecPilot 工作流执行需求。
 
-Use this command to design and implement a confirmed requirement.
+**参数**
+- `$ARGUMENTS` - 要执行的需求编号（如 REQ-001）
 
-## Preflight
+**规则约束**
+- 必须先读取项目指南：`docs/specpilot/project-guide.md`
+- 必须先读取需求草稿再开始
+- 如果需求已经过 `/specpilot:confirm` 确认，以【需求确认】部分为准进行设计和实施
+- 遵循草稿中指定的执行模式
+- 不修改与需求无关的代码
+- 保持实现最小化、聚焦
+- **技术方案确认后必须写入 draft 文件**
+- **代码实施后必须进行两轮自动审查（重要！不可跳过！）**
 
-1. Read the required SpecPilot context files.
-2. Read the target requirement and any existing design or task records.
-3. Inspect relevant code before proposing implementation.
-4. Check the working tree for unrelated changes and avoid reverting user work.
+**执行步骤**
 
-## Plan
+## 阶段一：准备
 
-1. If the requirement says `先出方案`, produce a technical design first and wait for explicit approval before coding.
-2. If the requirement says `直接实施`, still state a concise implementation plan before editing.
-3. Keep changes scoped to the requirement.
-4. Define verification commands before implementation.
+1. 从 `$ARGUMENTS` 解析需求编号（去除空格）
+2. 如果未提供编号，运行 `ls docs/specpilot/requirements/` 并询问用户要执行哪个需求
+3. 读取草稿文件：`docs/specpilot/requirements/REQ-{编号}-draft.md`
+4. 读取项目指南：`docs/specpilot/project-guide.md`
+5. 更新 `docs/specpilot/requirements/index.md`：将状态改为 `🚧 in_progress`
 
-## Commands
+## 阶段二：上下文收集
 
-1. Implement the approved design using existing project patterns.
-2. Update requirement records with design, tasks, implementation notes, and test evidence where appropriate.
-3. Avoid unrelated refactors.
-4. Preserve generated-file and project-specific rules from `docs/specpilot/project.md`, `docs/specpilot/project-guide.md`, and `AGENTS.md` if it exists.
+1. 如果指定了"关联需求"，读取那些已存档的需求文件
+2. 如果指定了"代码位置说明"，读取相关文件
+3. 如果未提供"上下文信息"，自行分析相关代码理解上下文
+4. 检查是否存在 `REQ-{编号}-tasks.md`，如有则使用它作为任务清单
 
-## Verification
+## 阶段三：技术方案设计
 
-1. Run focused tests or checks matching the changed area.
-2. Re-read changed files and requirement records.
-3. Report any tests that could not be run.
+### 如果是"先出方案"模式（默认）：
 
-## Summary
+1. 输出技术方案：
+```markdown
+## 需求理解
+[对需求的理解总结]
 
-Report implemented scope, changed areas, validation evidence, and residual risks.
+## 技术方案
+### 改动范围
+- 新增文件：xxx
+- 修改文件：xxx
 
-## Next Steps
+### 数据模型设计
+[新增/修改的数据结构定义]
 
-Suggest `/specpilot:check REQ-xxx` before commit or `/specpilot:archive REQ-xxx` after acceptance.
+### 实现思路
+[核心实现逻辑]
+
+### 数据流/调用链路
+[完整的数据流向说明，从输入到最终处理]
+
+### 关键代码设计
+[重要的代码设计，如核心方法签名、关键逻辑]
+
+## 风险点分析
+- [潜在风险1]
+- [潜在风险2]
+
+## 待确认
+- [待确认点1]
+- [待确认点2]
+```
+
+2. 等待用户确认："方案确认，请开始实施"
+
+### 如果是"直接实施"模式：
+
+1. 仍然需要先设计技术方案（可简化），然后直接进入实施
+
+## 阶段四：技术方案记录（重要）
+
+**用户确认方案后，必须将技术方案写入 draft 文件**：
+
+1. 在 draft 文件中添加或更新【技术方案】章节
+2. 如果方案有调整，更新版本号并记录变更原因
+
+## 阶段五：实施开发
+
+1. 如果存在 `REQ-{编号}-tasks.md`，按任务顺序执行并标记完成
+2. 遵循 `project-guide.md` 中的项目规范
+3. 最小范围实现变更
+4. 添加必要的注释和日志
+
+## 阶段六：代码自审（重要！不可跳过！）
+
+**代码实施完成后，必须进行两轮自动审查：**
+
+### 第一轮审查：完整性检查
+
+1. **需求覆盖检查**：
+   - 对照需求确认中的每一项，检查是否都已实现
+   - 检查所有字段是否都已正确处理
+   - 检查边界条件是否都已覆盖
+
+2. **数据流检查**：
+   - 追踪数据从输入到输出的完整路径
+   - 检查 MQ/异步场景下数据是否能正确传递
+   - 检查数据存储和读取的时序是否正确
+
+3. **代码一致性检查**：
+   - 检查字段命名是否与需求/规范一致
+   - 检查数据格式是否符合外部接口要求
+
+### 第二轮审查：质量检查
+
+1. **代码质量**：
+   - 是否有重复代码可以抽取公共方法
+   - 错误处理是否完善
+   - 日志是否充足
+
+2. **潜在问题**：
+   - 是否有数据覆盖风险（更新嵌套字段时）
+   - 是否有并发安全问题
+   - 默认值处理是否正确
+
+3. **输出审查结果**：
+
+```markdown
+## 代码自审结果
+
+### 第一轮：完整性检查
+- [x] 需求覆盖：所有功能点已实现
+- [x] 数据流：数据传递路径正确
+- [ ] 发现问题：[问题描述]
+
+### 第二轮：质量检查
+- [x] 代码质量：无重复代码
+- [ ] 发现问题：[问题描述]
+
+### 需要修复的问题
+1. [问题1]：[修复方案]
+2. [问题2]：[修复方案]
+```
+
+4. **如果发现问题，必须修复后再次审查**，直到所有检查项通过
+
+## 阶段七：更新文档并完成
+
+1. **更新 draft 文件**，添加【技术方案审查记录】和【经验总结】章节
+
+2. **输出改动说明**
+
+3. **提示用户**：
+```
+需求 REQ-{编号} 开发完成。
+
+代码已通过自审检查：
+- 需求覆盖：✅
+- 数据流检查：✅
+- 代码质量：✅
+
+技术方案已记录到：docs/specpilot/requirements/REQ-{编号}-draft.md
+
+如需存档，请执行：/specpilot:archive REQ-{编号}
+```
+
+**参考文档**
+- 完整规范见 `docs/specpilot/README.md`
+- 现有能力规格见 `docs/specpilot/specs/`
