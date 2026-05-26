@@ -46,7 +46,7 @@ Codex：先出技术方案，确认后再编码、测试、记录结果
 
 | 能力 | 说明 |
 |------|------|
-| `/specpilot:*` 命令 | 安装 8 个 Codex slash commands，输入 `/specpilot` 可筛选动作 |
+| `/specpilot:*` 命令 | 安装 9 个 Codex slash commands，输入 `/specpilot` 可筛选动作 |
 | 唯一入口 | 默认清理旧版本遗留的 SpecPilot skills，只保留 `/specpilot:*` 命令入口 |
 | 需求文档体系 | 初始化 `docs/specpilot/requirements/`、`specs/`、项目指南模板 |
 | 项目级上下文 | 通过 `docs/specpilot/project.md` 和 `project-guide.md` 承载项目差异 |
@@ -65,6 +65,7 @@ Codex：先出技术方案，确认后再编码、测试、记录结果
 | `/specpilot:confirm` | 确认需求、业务规则、边界条件 |
 | `/specpilot:exec` | 设计方案并在确认后实施 |
 | `/specpilot:check` | 深度复核需求、方案、实现、测试和风险 |
+| `/specpilot:show` | 查看需求或能力规格详情 |
 | `/specpilot:update` | 处理需求变更 |
 | `/specpilot:archive` | 归档已完成需求 |
 | `/specpilot:cancel` | 取消需求但保留记录 |
@@ -225,7 +226,7 @@ docs/specpilot/
 
 `docs/specpilot/project-guide.md` 是 SpecPilot 的项目级上下文。后续使用 `/specpilot:new`、`/specpilot:confirm`、`/specpilot:exec`、`/specpilot:check` 时，Codex 会先读取它来理解项目结构和开发约束。
 
-`AGENTS.md` 不是必需入口。8 个 `/specpilot:*` 命令是全局固定的，不需要每个项目各写一份；项目差异主要放在 `docs/specpilot/project.md` 和 `docs/specpilot/project-guide.md`。如果项目原本就有 `AGENTS.md`，Codex 仍可把它作为补充上下文读取。
+`AGENTS.md` 不是必需入口。9 个 `/specpilot:*` 命令是全局固定的，不需要每个项目各写一份；项目差异主要放在 `docs/specpilot/project.md` 和 `docs/specpilot/project-guide.md`。如果项目原本就有 `AGENTS.md`，Codex 仍可把它作为补充上下文读取。
 
 首次安装后，如果这个文件仍是模板，安装器会询问：
 

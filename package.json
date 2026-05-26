@@ -1,6 +1,6 @@
 {
   "name": "specpilot-codex",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "SpecPilot requirement-driven development workflow for Codex with slash-discoverable commands.",
   "type": "module",
   "bin": {

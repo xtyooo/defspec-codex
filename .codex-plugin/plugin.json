@@ -1,6 +1,6 @@
 {
   "name": "specpilot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "SpecPilot requirement-driven development workflow for Codex with slash-discoverable commands.",
   "author": {
     "name": "xtyooo",
@@ -19,7 +19,7 @@
   "interface": {
     "displayName": "SpecPilot",
     "shortDescription": "Requirement-driven development commands for Codex",
-    "longDescription": "SpecPilot adds slash-discoverable Codex commands for creating, confirming, executing, checking, updating, archiving, and cancelling requirement records before implementation.",
+    "longDescription": "SpecPilot adds slash-discoverable Codex commands for creating, confirming, executing, checking, showing, updating, archiving, and cancelling requirement records before implementation.",
     "developerName": "xtyooo",
     "category": "Coding",
     "capabilities": [
@@ -33,6 +33,7 @@
     "defaultPrompt": [
       "Run /specpilot:new for this feature",
       "Run /specpilot:check REQ-001",
+      "Run /specpilot:show REQ-001",
       "Run /specpilot:list"
     ],
     "brandColor": "#0F766E",

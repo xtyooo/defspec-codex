@@ -8,6 +8,7 @@
 | `/specpilot:confirm REQ-xxx` | 确认需求，补齐业务规则和边界 |
 | `/specpilot:exec REQ-xxx` | 设计并执行需求 |
 | `/specpilot:check REQ-xxx` | 检查需求和实现状态 |
+| `/specpilot:show REQ-xxx` | 查看需求或能力规格详情 |
 | `/specpilot:update REQ-xxx` | 处理需求变更 |
 | `/specpilot:archive REQ-xxx` | 归档已完成需求 |
 | `/specpilot:list` | 查看需求列表 |

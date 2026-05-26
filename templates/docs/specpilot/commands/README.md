@@ -8,8 +8,10 @@
 - `/specpilot:confirm REQ-xxx`
 - `/specpilot:exec REQ-xxx`
 - `/specpilot:check REQ-xxx`
+- `/specpilot:show REQ-xxx`
 - `/specpilot:update REQ-xxx`
 - `/specpilot:archive REQ-xxx`
+- `/specpilot:cancel REQ-xxx`
 - `/specpilot:list`
 
-具体流程见 `docs/specpilot/specpilot.md`、`project.md` 和 `project-guide.md`。
+具体流程见 `docs/specpilot/SPECPILOT.md`、`project.md` 和 `project-guide.md`。
