@@ -135,6 +135,7 @@ Usage:
   npx defspec-codex --skills-only   Install/update global Codex command integration only
   npx defspec-codex --integration-only
   npx defspec-codex --init-only     Initialize current project only
+  npx defspec-codex --with-agents   Also write the optional AGENTS.md DefSpec bootstrap
   npx defspec-codex --check         Check current installation
   npx defspec-codex --uninstall     Remove current project DefSpec files
   npx defspec-codex --uninstall --skills-only
@@ -300,7 +301,30 @@ function installCodexIntegration() {
   installCodexConfig();
 }
 
-function initProject({ force, yes }) {
+function updateAgentsBootstrap({ withAgents }) {
+  const agentsPath = resolve(PROJECT_DIR, 'AGENTS.md');
+  if (!withAgents) {
+    if (!existsSync(agentsPath)) return;
+    const result = removeSentinelSection(readFileSync(agentsPath, 'utf8'));
+    if (result.removed) {
+      writeFileSync(agentsPath, result.content, 'utf8');
+      console.log(`  ✅ Removed legacy AGENTS.md DefSpec bootstrap -> ${agentsPath}`);
+    }
+    return;
+  }
+
+  const section = readFileSync(AGENTS_SECTION_SRC, 'utf8');
+  const existing = existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : '# Codex Project Guide\n';
+  const next = replaceSentinelSection(existing, section);
+  if (next !== existing) {
+    writeFileSync(agentsPath, next, 'utf8');
+    console.log(`  ✅ AGENTS.md updated -> ${agentsPath}`);
+  } else {
+    console.log('  ✅ AGENTS.md already up to date');
+  }
+}
+
+function initProject({ force, yes, withAgents }) {
   if (!force && isHomeDir(PROJECT_DIR)) {
     throw new Error(`Refusing to initialize home directory: ${PROJECT_DIR}. Run from a project directory or pass --force.`);
   }
@@ -314,16 +338,7 @@ function initProject({ force, yes }) {
     console.log(`  ✅ Project docs -> ${docsDest}`);
   }
 
-  const agentsPath = resolve(PROJECT_DIR, 'AGENTS.md');
-  const section = readFileSync(AGENTS_SECTION_SRC, 'utf8');
-  const existing = existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : '# Codex Project Guide\n';
-  const next = replaceSentinelSection(existing, section);
-  if (next !== existing) {
-    writeFileSync(agentsPath, next, 'utf8');
-    console.log(`  ✅ AGENTS.md updated -> ${agentsPath}`);
-  } else {
-    console.log('  ✅ AGENTS.md already up to date');
-  }
+  updateAgentsBootstrap({ withAgents });
 }
 
 function projectGuideNeedsInit() {
@@ -341,7 +356,7 @@ function buildProjectGuidePrompt() {
 1. docs/defspec/DEFSPEC.md
 2. docs/defspec/project.md
 3. docs/defspec/project-guide.md
-4. AGENTS.md
+4. AGENTS.md（如果存在）
 
 然后分析当前仓库的真实代码结构、技术栈、开发规范、运行方式、测试方式和常见改动路径，并更新 docs/defspec/project-guide.md。
 
@@ -435,8 +450,13 @@ function checkInstall() {
   console.log(`  ${hasConfig ? '✅' : '❌'} Codex plugin enabled`);
   console.log(`  ${existsSync(resolve(PROJECT_DIR, 'docs', 'defspec', 'DEFSPEC.md')) ? '✅' : '❌'} docs/defspec`);
   const agentsPath = resolve(PROJECT_DIR, 'AGENTS.md');
-  const hasAgents = existsSync(agentsPath) && readFileSync(agentsPath, 'utf8').includes(SENTINEL_BEGIN);
-  console.log(`  ${hasAgents ? '✅' : '❌'} AGENTS.md bootstrap`);
+  const agentsContent = existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : '';
+  const hasAgents = agentsContent.includes(SENTINEL_BEGIN);
+  const hasLegacyAgentsSkillText = /\.codex[\\/]skills|local Codex skills|Codex skills installed by `defspec-codex`/i.test(agentsContent);
+  console.log(`  ${hasAgents ? 'ℹ️ ' : '✅'} AGENTS.md DefSpec bootstrap ${hasAgents ? 'present (optional)' : 'not installed by default'}`);
+  if (!hasAgents && hasLegacyAgentsSkillText) {
+    console.log('  ℹ️  AGENTS.md contains legacy DefSpec skill wording; it is safe to keep, but /defspec commands no longer need it');
+  }
 }
 
 function uninstallSkills() {
@@ -507,6 +527,7 @@ const initOnly = has('--init-only');
 const force = has('--force') || has('-f');
 const yes = has('--yes') || has('-y');
 const noGuidePrompt = has('--no-guide-prompt');
+const withAgents = has('--with-agents');
 
 try {
   if (help) {
@@ -523,7 +544,7 @@ try {
   } else {
     console.log(`\ndefspec-codex v${PKG.version}\n`);
     if (!initOnly) installCodexIntegration();
-    if (!skillsOnly) initProject({ force, yes });
+    if (!skillsOnly) initProject({ force, yes, withAgents });
     if (!skillsOnly) await promptProjectGuideInit({ skip: noGuidePrompt });
     console.log('\n  Install complete. Restart Codex, then type /defspec in the composer.\n');
   }

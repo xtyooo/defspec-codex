@@ -28,7 +28,7 @@ Use this command to design and implement a confirmed requirement.
 1. Implement the approved design using existing project patterns.
 2. Update requirement records with design, tasks, implementation notes, and test evidence where appropriate.
 3. Avoid unrelated refactors.
-4. Preserve generated-file and project-specific rules from `AGENTS.md`.
+4. Preserve generated-file and project-specific rules from `docs/defspec/project.md`, `docs/defspec/project-guide.md`, and `AGENTS.md` if it exists.
 
 ## Verification
 

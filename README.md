@@ -49,8 +49,8 @@ Codex：先出技术方案，确认后再编码、测试、记录结果
 | `/defspec:*` 命令 | 安装 8 个 Codex slash commands，输入 `/defspec` 可筛选动作 |
 | 唯一入口 | 默认清理旧版本遗留的 DefSpec skills，只保留 `/defspec:*` 命令入口 |
 | 需求文档体系 | 初始化 `docs/defspec/requirements/`、`specs/`、项目指南模板 |
-| Codex 项目引导 | 向 `AGENTS.md` 写入 DefSpec bootstrap 段落 |
-| 可重复安装 | 使用哨兵注释更新 `AGENTS.md`，重复运行不会无限追加 |
+| 项目级上下文 | 通过 `docs/defspec/project.md` 和 `project-guide.md` 承载项目差异 |
+| 可重复安装 | 重复运行会复用已有 `docs/defspec/`，不会重复堆叠入口 |
 | 可检查 | `--check` 检查 commands、历史重复入口、插件启用状态和当前项目初始化状态 |
 | 可卸载 | `--uninstall` 清理安装的项目段落和模板 |
 
@@ -156,6 +156,12 @@ npx github:xtyooo/defspec-codex --integration-only
 npx github:xtyooo/defspec-codex --init-only
 ```
 
+默认不会写入 `AGENTS.md`。如果你希望某个项目显式保留 DefSpec bootstrap，可以加：
+
+```bash
+npx github:xtyooo/defspec-codex --with-agents
+```
+
 检查安装状态：
 
 ```bash
@@ -203,7 +209,6 @@ Codex marketplace 注册：
 当前项目文件：
 
 ```text
-AGENTS.md
 docs/defspec/
 ├── DEFSPEC.md
 ├── QUICKREF.md
@@ -219,6 +224,8 @@ docs/defspec/
 ## 初始化 project-guide.md
 
 `docs/defspec/project-guide.md` 是 DefSpec 的项目级上下文。后续使用 `/defspec:new`、`/defspec:confirm`、`/defspec:exec`、`/defspec:check` 时，Codex 会先读取它来理解项目结构和开发约束。
+
+`AGENTS.md` 不是必需入口。8 个 `/defspec:*` 命令是全局固定的，不需要每个项目各写一份；项目差异主要放在 `docs/defspec/project.md` 和 `docs/defspec/project-guide.md`。如果项目原本就有 `AGENTS.md`，Codex 仍可把它作为补充上下文读取。
 
 首次安装后，如果这个文件仍是模板，安装器会询问：
 
@@ -316,7 +323,7 @@ node bin/defspec-codex.js --init-only
 
 - 默认拒绝在用户主目录初始化项目，避免污染全局环境。
 - 已存在 `docs/defspec/` 时默认不覆盖，除非传入 `--yes`。
-- `AGENTS.md` 使用 `defspec-codex:begin/end` 哨兵注释，便于重复安装和卸载。
+- 默认不写入 `AGENTS.md`；旧版本写入的 DefSpec 哨兵段落会在安装时自动清理。需要保留时可使用 `--with-agents`。
 - 安装时只清理名称为 `defspec-*` 且包含 `SKILL.md` 的历史 DefSpec skill 目录，不会删除其他用户 skills。
 - 卸载不会删除你的业务代码。
 

@@ -10,7 +10,7 @@ Before starting requirement-driven work, read:
 3. `docs/defspec/project-guide.md`
 4. `docs/defspec/requirements/index.md`
 
-Codex skills installed by `defspec-codex` provide separate `/` entries:
+The global commands installed by `defspec-codex` provide separate `/` entries:
 
 - `DefSpec New`
 - `DefSpec List`
@@ -25,4 +25,3 @@ Use DefSpec for new capabilities, user-visible behavior changes, cross-module wo
 
 In `先出方案` mode, produce the design first and wait for explicit approval before coding.
 <!-- defspec-codex:end -->
-

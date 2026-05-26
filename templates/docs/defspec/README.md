@@ -20,20 +20,7 @@ DefSpec 是本项目用于后续需求开发的定义驱动流程。它把“需
 
 ## 使用方式
 
-当前项目使用 `defspec-codex` 提供多个 Codex skills：
-
-```text
-.codex/skills/defspec-new/SKILL.md
-.codex/skills/defspec-list/SKILL.md
-.codex/skills/defspec-confirm/SKILL.md
-.codex/skills/defspec-exec/SKILL.md
-.codex/skills/defspec-check/SKILL.md
-.codex/skills/defspec-update/SKILL.md
-.codex/skills/defspec-archive/SKILL.md
-.codex/skills/defspec-cancel/SKILL.md
-```
-
-注册到 `~/.codex/config.toml` 后，输入 `/defspec` 可以筛选出多个 DefSpec 动作候选。也可以直接输入文本指令，例如：
+当前项目使用 `defspec-codex` 提供的全局 `/defspec:*` 命令。安装后，输入 `/defspec` 可以筛选出 8 个固定动作。也可以直接输入文本指令，例如：
 
 ```text
 /defspec:new
@@ -43,7 +30,7 @@ DefSpec 是本项目用于后续需求开发的定义驱动流程。它把“需
 /defspec:archive REQ-001
 ```
 
-Codex 会根据 `AGENTS.md` 和 `DEFSPEC.md` 将这些指令作为项目内工作流处理。
+Codex 会根据 `DEFSPEC.md`、`project.md`、`project-guide.md` 和需求记录将这些指令作为项目内工作流处理。`AGENTS.md` 不是必需文件；如果项目已有该文件，可作为补充上下文。
 
 ## 文件约定
 
